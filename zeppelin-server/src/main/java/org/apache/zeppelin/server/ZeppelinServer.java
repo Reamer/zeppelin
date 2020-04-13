@@ -100,7 +100,11 @@ import org.apache.zeppelin.user.Credentials;
 import org.apache.zeppelin.util.ReflectionUtils;
 import org.apache.zeppelin.utils.PEMImporter;
 import org.eclipse.jetty.http.HttpScheme;
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http2.HTTP2Cipher;
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.jmx.ConnectorServer;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
@@ -357,24 +361,28 @@ public class ZeppelinServer extends ResourceConfig {
       httpConfig.setSecureScheme(HttpScheme.HTTPS.asString());
       httpConfig.setSecurePort(sslPort);
 
+      // HTTPS Configuration
       HttpConfiguration httpsConfig = new HttpConfiguration(httpConfig);
       httpsConfig.addCustomizer(new SecureRequestCustomizer());
 
-      SslConnectionFactory sslConnectionFactory = new SslConnectionFactory(getSslContextFactory(conf), HttpVersion.HTTP_1_1.asString());
-      HttpConnectionFactory httpsConnectionFactory = new HttpConnectionFactory(httpsConfig);
-      connector =
-              new ServerConnector(
-                      server,
-                      sslConnectionFactory,
-                      httpsConnectionFactory);
+      // HTTP/2 Connection Factory
+      HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpsConfig);
+      ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
+      alpn.setDefaultProtocol("h2");
+
+      // SSL Connection Factory
+      SslConnectionFactory ssl = new SslConnectionFactory(getSslContextFactory(conf), alpn.getProtocol());
+
+      // HTTP/2 Connector
+      connector = new ServerConnector(server, ssl, alpn, h2, new HttpConnectionFactory(httpsConfig));
       connector.setPort(sslPort);
       connector.addBean(new JettySslHandshakeMetrics(Metrics.globalRegistry, Tags.empty()));
     } else {
-      HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(httpConfig);
-      connector =
-              new ServerConnector(
-                      server,
-                      httpConnectionFactory);
+      HttpConnectionFactory h1 = new HttpConnectionFactory(httpConfig);
+      // HTTP/2 Connection Factory
+      HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
+      // Add h1 as first, then it's the default
+      connector = new ServerConnector(server, h1, h2c);
       connector.setPort(port);
     }
     // Set some timeout options to make debugging easier.
@@ -473,6 +481,7 @@ public class ZeppelinServer extends ResourceConfig {
 
   private static SslContextFactory getSslContextFactory(ZeppelinConfiguration conf) {
     SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+    sslContextFactory.setCipherComparator(HTTP2Cipher.COMPARATOR);
 
     // initialize KeyStore
     // Check for PEM files
