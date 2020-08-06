@@ -32,10 +32,10 @@ public class JobProgressPoller extends Thread {
   public static final long DEFAULT_INTERVAL_MSEC = 500;
   private static final Logger logger = LoggerFactory.getLogger(JobProgressPoller.class);
 
-  private Job job;
+  private Job<?> job;
   private long intervalMs;
 
-  public JobProgressPoller(Job job, long intervalMs) {
+  public JobProgressPoller(Job<?> job, long intervalMs) {
     super("JobProgressPoller, jobId=" + job.getId());
     this.job = job;
     if (intervalMs < 0) {
@@ -48,7 +48,7 @@ public class JobProgressPoller extends Thread {
   public void run() {
     try {
       while (!Thread.interrupted()) {
-        JobListener listener = job.getListener();
+        JobListener<Job<?>> listener = job.getListener();
         if (listener != null) {
           try {
             if (job.isRunning()) {

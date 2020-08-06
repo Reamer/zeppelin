@@ -16,9 +16,10 @@
  */
 package org.apache.zeppelin.interpreter.remote;
 
-import com.google.gson.Gson;
 import org.apache.zeppelin.common.JsonSerializable;
 import org.apache.zeppelin.resource.ResourceId;
+
+import com.google.gson.Gson;
 
 /**
  * message payload to invoke method of resource in the resourcepool
@@ -35,7 +36,7 @@ public class InvokeResourceMethodEventMessage implements JsonSerializable {
   public InvokeResourceMethodEventMessage(
       ResourceId resourceId,
       String methodName,
-      Class[] paramtypes,
+      Class<?>[] paramtypes,
       Object[] params,
       String returnResourceName
   ) {
@@ -54,12 +55,12 @@ public class InvokeResourceMethodEventMessage implements JsonSerializable {
     this.returnResourceName = returnResourceName;
   }
 
-  public Class [] getParamTypes() throws ClassNotFoundException {
+  public Class<?> [] getParamTypes() throws ClassNotFoundException {
     if (paramClassnames == null) {
       return null;
     }
 
-    Class [] types = new Class[paramClassnames.length];
+    Class<?> [] types = new Class[paramClassnames.length];
     for (int i = 0; i < paramClassnames.length; i++) {
       types[i] = this.getClass().getClassLoader().loadClass(paramClassnames[i]);
     }
@@ -73,17 +74,18 @@ public class InvokeResourceMethodEventMessage implements JsonSerializable {
 
   @Override
   public int hashCode() {
-    String hash = resourceId.hashCode() + methodName;
+    StringBuilder hash = new StringBuilder();
+    hash.append(resourceId.hashCode()).append(methodName);
     if (paramClassnames != null) {
       for (String name : paramClassnames) {
-        hash += name;
+          hash.append(name);
       }
     }
     if (returnResourceName != null) {
-      hash += returnResourceName;
+        hash.append(returnResourceName);
     }
 
-    return hash.hashCode();
+    return hash.toString().hashCode();
   }
 
   @Override

@@ -39,7 +39,7 @@ public interface ResourcePoolConnector {
   Object invokeMethod(
       ResourceId id,
       String methodName,
-      Class[] paramTypes,
+      Class<?>[] paramTypes,
       Object[] params);
 
   /**
@@ -48,7 +48,7 @@ public interface ResourcePoolConnector {
   Resource invokeMethod(
       ResourceId id,
       String methodName,
-      Class[] paramTypes,
+      Class<?>[] paramTypes,
       Object[] params,
       String returnResourceName);
 }

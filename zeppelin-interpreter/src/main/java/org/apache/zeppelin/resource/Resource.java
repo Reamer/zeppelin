@@ -16,15 +16,6 @@
  */
 package org.apache.zeppelin.resource;
 
-import com.google.gson.Gson;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import com.google.gson.internal.Primitives;
-import org.apache.zeppelin.common.JsonSerializable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +23,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.zeppelin.common.JsonSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.internal.Primitives;
 
 /**
  * Information and reference to the resource
@@ -159,7 +161,7 @@ public class Resource implements JsonSerializable, Serializable {
    * @throws ClassNotFoundException
    */
   public Object invokeMethod(
-          String methodName, ArrayList params)
+          String methodName, ArrayList<?> params)
           throws ClassNotFoundException {
     Object[] paramsArray = params.toArray(new Object[]{});
     return invokeMethod(methodName, paramsArray);
@@ -187,7 +189,7 @@ public class Resource implements JsonSerializable, Serializable {
    * @throws ClassNotFoundException
    */
   public Resource invokeMethod(
-          String methodName, ArrayList params, String returnResourceName)
+          String methodName, ArrayList<?> params, String returnResourceName)
           throws ClassNotFoundException {
     Object[] paramsArray = params.toArray(new Object[]{});
     return invokeMethod(methodName, paramsArray, returnResourceName);
@@ -217,7 +219,7 @@ public class Resource implements JsonSerializable, Serializable {
    * @throws ClassNotFoundException
    */
   public Object invokeMethod(
-          String methodName, ArrayList<String> paramTypes, ArrayList params)
+          String methodName, ArrayList<String> paramTypes, ArrayList<?> params)
           throws ClassNotFoundException {
     String[] paramTypesArray = paramTypes.toArray(new String[]{});
     Object[] paramsArray = params.toArray(new Object[]{});
@@ -242,7 +244,7 @@ public class Resource implements JsonSerializable, Serializable {
 
 
   public Resource invokeMethod(
-          String methodName, ArrayList<String> paramTypes, ArrayList params, String returnResourceName)
+          String methodName, List<String> paramTypes, List<Object> params, String returnResourceName)
           throws ClassNotFoundException {
     String[] paramTypesArray = paramTypes.toArray(new String[]{});
     Object[] paramsArray = params.toArray(new Object[]{});
@@ -275,7 +277,7 @@ public class Resource implements JsonSerializable, Serializable {
   public Object invokeMethod(
           String methodName, Type[] types, Object[] params, String returnResourceName) throws ClassNotFoundException {
     Object[] convertedParams = null;
-    Class[] classes = null;
+    Class<?>[] classes = null;
 
     if (types != null) {
       convertedParams = convertParams(types, params);
@@ -332,15 +334,14 @@ public class Resource implements JsonSerializable, Serializable {
    * @return return value of the method
    */
   public Object invokeMethod(
-      String methodName, Class[] paramTypes, Object[] params) {
+      String methodName, Class<?>[] paramTypes, Object[] params) {
     if (r != null) {
       try {
         Method method = r.getClass().getMethod(
             methodName,
             paramTypes);
         method.setAccessible(true);
-        Object ret = method.invoke(r, params);
-        return ret;
+        return method.invoke(r, params);
       } catch (Exception e) {
         logException(e);
         return null;
@@ -360,7 +361,7 @@ public class Resource implements JsonSerializable, Serializable {
    * @return Resource that holds return value
    */
   public Resource invokeMethod(
-      String methodName, Class[] paramTypes, Object[] params, String returnResourceName) {
+      String methodName, Class<?>[] paramTypes, Object[] params, String returnResourceName) {
     if (r != null) {
       try {
         Method method = r.getClass().getMethod(
@@ -447,7 +448,7 @@ public class Resource implements JsonSerializable, Serializable {
 
   private ParameterizedType typeFromName(String commaSeparatedClasses) throws ClassNotFoundException {
     String[] classNames = commaSeparatedClasses.split(",");
-    Class [] arguments;
+    Class<?> [] arguments;
 
     if (classNames.length > 1) {
       arguments = new Class[classNames.length - 1];
@@ -458,7 +459,7 @@ public class Resource implements JsonSerializable, Serializable {
       arguments = new Class[0];
     }
 
-    Class rawType = loadClass(classNames[0]);
+    Class<?> rawType = loadClass(classNames[0]);
 
     return new ParameterizedType() {
       @Override
@@ -478,8 +479,8 @@ public class Resource implements JsonSerializable, Serializable {
     };
   }
 
-  private Class [] classFromType(Type[] types) throws ClassNotFoundException {
-    Class[] cls = new Class[types.length];
+  private Class<?> [] classFromType(Type[] types) throws ClassNotFoundException {
+    Class<?>[] cls = new Class[types.length];
     for (int i = 0; i < types.length; i++) {
       if (types[i] instanceof ParameterizedType) {
         String typeName = ((ParameterizedType) types[i]).getRawType().getTypeName();
@@ -518,7 +519,7 @@ public class Resource implements JsonSerializable, Serializable {
     return converted;
   }
 
-  private Class loadClass(String className) throws ClassNotFoundException {
+  private Class<?> loadClass(String className) throws ClassNotFoundException {
     switch(className) {
       case "byte":
         return byte.class;

@@ -18,9 +18,6 @@
 
 package org.apache.zeppelin.interpreter.util;
 
-
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -138,16 +135,13 @@ public class SqlSplitter {
 
   private boolean isSingleLineComment(char curChar, char nextChar) {
     for (String singleCommentPrefix : singleLineCommentPrefixList) {
-      if (singleCommentPrefix.length() == 1) {
-        if (curChar == singleCommentPrefix.charAt(0)) {
-          return true;
-        }
+      if (singleCommentPrefix.length() == 1 && curChar == singleCommentPrefix.charAt(0)) {
+        return true;
       }
-      if (singleCommentPrefix.length() == 2) {
-        if (curChar == singleCommentPrefix.charAt(0) &&
-                nextChar == singleCommentPrefix.charAt(1)) {
-          return true;
-        }
+      if (singleCommentPrefix.length() == 2 && 
+          curChar == singleCommentPrefix.charAt(0) &&
+          nextChar == singleCommentPrefix.charAt(1)) {
+        return true;
       }
     }
     return false;

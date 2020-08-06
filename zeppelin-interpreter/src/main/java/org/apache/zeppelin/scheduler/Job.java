@@ -17,13 +17,14 @@
 
 package org.apache.zeppelin.scheduler;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -37,7 +38,8 @@ import java.util.Map;
  * and saving/loading jobs from disk.
  * Changing/adding/deleting non transitive field name need consideration of that.
  */
-public abstract class Job<T> {
+public abstract class Job<T> implements Serializable{
+
   private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
   private static SimpleDateFormat JOB_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss");
 
@@ -83,9 +85,9 @@ public abstract class Job<T> {
   transient boolean aborted = false;
   private volatile String errorMessage;
   private transient volatile Throwable exception;
-  private transient JobListener listener;
+  private transient JobListener<Job<?>> listener;
 
-  public Job(String jobName, JobListener listener) {
+  public Job(String jobName, JobListener<Job<?>> listener) {
     this.jobName = jobName;
     this.listener = listener;
     dateCreated = new Date();
@@ -93,7 +95,7 @@ public abstract class Job<T> {
     setStatus(Status.READY);
   }
 
-  public Job(String jobId, String jobName, JobListener listener) {
+  public Job(String jobId, String jobName, JobListener<Job<?>> listener) {
     this.jobName = jobName;
     this.listener = listener;
     dateCreated = new Date();
@@ -116,7 +118,10 @@ public abstract class Job<T> {
 
   @Override
   public boolean equals(Object o) {
-    return ((Job) o).id.equals(id);
+    if (o instanceof Job<?>) {
+      return ((Job<?>) o).id.equals(id);
+    }
+    return false;
   }
 
   public Status getStatus() {
@@ -142,11 +147,11 @@ public abstract class Job<T> {
     }
   }
 
-  public void setListener(JobListener listener) {
+  public void setListener(JobListener<Job<?>> listener) {
     this.listener = listener;
   }
 
-  public JobListener getListener() {
+  public JobListener<Job<?>> getListener() {
     return listener;
   }
 

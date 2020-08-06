@@ -16,8 +16,12 @@
  */
 package org.apache.zeppelin.interpreter.remote;
 
-import com.google.gson.Gson;
-import org.apache.thrift.TException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
@@ -36,7 +40,6 @@ import org.apache.zeppelin.interpreter.thrift.ParagraphInfo;
 import org.apache.zeppelin.interpreter.thrift.RegisterInfo;
 import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterEventService;
 import org.apache.zeppelin.interpreter.thrift.RunParagraphsEvent;
-import org.apache.zeppelin.interpreter.thrift.ServiceException;
 import org.apache.zeppelin.interpreter.thrift.WebUrlInfo;
 import org.apache.zeppelin.resource.RemoteResource;
 import org.apache.zeppelin.resource.Resource;
@@ -46,11 +49,7 @@ import org.apache.zeppelin.resource.ResourceSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.google.gson.Gson;
 
 /**
  * This class is used to communicate with ZeppelinServer via thrift.
@@ -58,8 +57,8 @@ import java.util.Map;
  */
 public class RemoteInterpreterEventClient implements ResourcePoolConnector,
     AngularObjectRegistryListener {
-  private final static Logger LOGGER = LoggerFactory.getLogger(RemoteInterpreterEventClient.class);
-  private final static Gson GSON = new Gson();
+  private static final Logger LOGGER = LoggerFactory.getLogger(RemoteInterpreterEventClient.class);
+  private static final Gson GSON = new Gson();
 
   private PooledRemoteClient<RemoteInterpreterEventService.Client> remoteClient;
   private String intpGroupId;
@@ -70,6 +69,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
       try {
         transport.open();
       } catch (TTransportException e) {
+        transport.close();
         throw new IOException(e);
       }
       TProtocol protocol = new TBinaryProtocol(transport);
@@ -124,18 +124,16 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
   }
 
   public List<ParagraphInfo> getParagraphList(String user, String noteId) {
-    List<ParagraphInfo> paragraphList = callRemoteFunction(client -> client.getParagraphList(user, noteId));
-    return paragraphList;
+    return callRemoteFunction(client -> client.getParagraphList(user, noteId));
   }
 
   @Override
   public Object readResource(ResourceId resourceId) {
     try {
       ByteBuffer buffer = callRemoteFunction(client -> client.getResource(resourceId.toJson()));
-      Object o = Resource.deserializeObject(buffer);
-      return o;
+      return Resource.deserializeObject(buffer);
     } catch (IOException | ClassNotFoundException e) {
-      LOGGER.warn("Fail to readResource: " + resourceId, e);
+      LOGGER.warn("Fail to readResource: {}", resourceId, e);
       return null;
     }
   }
@@ -153,7 +151,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
   public Object invokeMethod(
       ResourceId resourceId,
       String methodName,
-      Class[] paramTypes,
+      Class<?>[] paramTypes,
       Object[] params) {
     LOGGER.debug("Request Invoke method {} of Resource {}", methodName, resourceId.getName());
 
@@ -165,8 +163,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
             null);
     try {
       ByteBuffer buffer = callRemoteFunction(client -> client.invokeMethod(intpGroupId, invokeMethod.toJson()));
-      Object o = Resource.deserializeObject(buffer);
-      return o;
+      return Resource.deserializeObject(buffer);
     } catch (IOException | ClassNotFoundException e) {
       LOGGER.error("Failed to invoke method", e);
       return null;
@@ -187,7 +184,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
   public Resource invokeMethod(
       ResourceId resourceId,
       String methodName,
-      Class[] paramTypes,
+      Class<?>[] paramTypes,
       Object[] params,
       String returnResourceName) {
     LOGGER.debug("Request Invoke method {} of Resource {}", methodName, resourceId.getName());
@@ -278,7 +275,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to runParagraphs: " + event, e);
+      LOGGER.warn("Fail to runParagraphs: {}", event, e);
     }
   }
 
@@ -289,8 +286,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to checkpointOutput of paragraph: " +
-              paragraphId + " of note: " + noteId, e);
+      LOGGER.warn("Fail to checkpointOutput of paragraph: {} of note: {}",paragraphId, noteId, e);
     }
   }
 
@@ -304,7 +300,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to appendAppOutput: " + event, e);
+      LOGGER.warn("Fail to appendAppOutput: {}", event, e);
     }
   }
 
@@ -320,7 +316,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to updateAppOutput: " + event, e);
+      LOGGER.warn("Fail to updateAppOutput: {}", event, e);
     }
   }
 
@@ -333,7 +329,7 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to updateAppStatus: " + event, e);
+      LOGGER.warn("Fail to updateAppStatus: {}", event, e);
     }
   }
 
@@ -344,36 +340,36 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to onParaInfosReceived: " + infos, e);
+      LOGGER.warn("Fail to onParaInfosReceived: {}", infos, e);
     }
   }
 
   @Override
-  public synchronized void onAddAngularObject(String interpreterGroupId, AngularObject angularObject) {
+  public synchronized void onAddAngularObject(String interpreterGroupId, AngularObject<?> angularObject) {
     try {
       callRemoteFunction(client -> {
         client.addAngularObject(intpGroupId, angularObject.toJson());
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to add AngularObject: " + angularObject, e);
+      LOGGER.warn("Fail to add AngularObject: {}", angularObject, e);
     }
   }
 
   @Override
-  public void onUpdateAngularObject(String interpreterGroupId, AngularObject angularObject) {
+  public void onUpdateAngularObject(String interpreterGroupId, AngularObject<?> angularObject) {
     try {
       callRemoteFunction(client -> {
         client.updateAngularObject(intpGroupId, angularObject.toJson());
         return null;
       });
     } catch (Exception e) {
-      LOGGER.warn("Fail to update AngularObject: " + angularObject, e);
+      LOGGER.warn("Fail to update AngularObject: {}", angularObject, e);
     }
   }
 
   @Override
-  public void onRemoveAngularObject(String interpreterGroupId, AngularObject angularObject) {
+  public void onRemoveAngularObject(String interpreterGroupId, AngularObject<?> angularObject) {
     try {
       callRemoteFunction(client -> {
         client.removeAngularObject(intpGroupId,

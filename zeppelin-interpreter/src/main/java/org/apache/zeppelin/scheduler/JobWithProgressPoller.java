@@ -24,17 +24,17 @@ public abstract class JobWithProgressPoller<T> extends Job<T> {
   private long progressUpdateIntervalMs;
 
 
-  public JobWithProgressPoller(String jobId, String jobName, JobListener listener,
+  public JobWithProgressPoller(String jobId, String jobName, JobListener<Job<?>> listener,
                                long progressUpdateIntervalMs) {
     super(jobId, jobName, listener);
     this.progressUpdateIntervalMs = progressUpdateIntervalMs;
   }
 
-  public JobWithProgressPoller(String jobId, String jobName, JobListener listener) {
+  public JobWithProgressPoller(String jobId, String jobName, JobListener<Job<?>> listener) {
     this(jobId, jobName, listener, JobProgressPoller.DEFAULT_INTERVAL_MSEC);
   }
 
-  public JobWithProgressPoller(String jobId, JobListener listener) {
+  public JobWithProgressPoller(String jobId, JobListener<Job<?>> listener) {
     this(jobId, jobId, listener);
   }
 

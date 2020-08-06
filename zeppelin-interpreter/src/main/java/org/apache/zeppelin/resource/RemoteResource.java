@@ -16,9 +16,11 @@
  */
 package org.apache.zeppelin.resource;
 
-import com.google.gson.Gson;
 import java.io.Serializable;
+
 import org.apache.zeppelin.common.JsonSerializable;
+
+import com.google.gson.Gson;
 
 /**
  * Resource that can retrieve data from remote
@@ -39,8 +41,7 @@ public class RemoteResource extends Resource implements JsonSerializable, Serial
   @Override
   public Object get() {
     if (isSerializable()) {
-      Object o = resourcePoolConnector.readResource(getResourceId());
-      return o;
+      return resourcePoolConnector.readResource(getResourceId());
     } else {
       return null;
     }
@@ -89,13 +90,12 @@ public class RemoteResource extends Resource implements JsonSerializable, Serial
   public Resource invokeMethod(
       String methodName, Class [] paramTypes, Object [] params, String returnResourceName) {
     ResourceId resourceId = getResourceId();
-    Resource resource = resourcePoolConnector.invokeMethod(
+    return resourcePoolConnector.invokeMethod(
         resourceId,
         methodName,
         paramTypes,
         params,
         returnResourceName);
-    return resource;
   }
 
   public String toJson() {
