@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +49,6 @@ public class ZeppelinConfiguration extends XMLConfiguration {
 
   private Boolean anonymousAllowed;
 
-  private static final String HELIUM_PACKAGE_DEFAULT_URL =
-      "https://s3.amazonaws.com/helium-package/helium.json";
   private static ZeppelinConfiguration conf;
 
   private Map<String, String> properties = new HashMap<>();
@@ -128,13 +127,13 @@ public class ZeppelinConfiguration extends XMLConfiguration {
 
     if (url == null) {
       try {
-        Map procEnv = EnvironmentUtils.getProcEnvironment();
+        Map<String, String> procEnv = EnvironmentUtils.getProcEnvironment();
         if (procEnv.containsKey("ZEPPELIN_HOME")) {
-          String zconfDir = (String) procEnv.get("ZEPPELIN_HOME");
+          String zconfDir = procEnv.get("ZEPPELIN_HOME");
           File file = new File(zconfDir + File.separator
               + "conf" + File.separator + ZEPPELIN_SITE_XML);
           if (file.exists()) {
-            url = file.toURL();
+            url = file.toURI().toURL();
           }
         }
       } catch (IOException e) {
@@ -144,12 +143,12 @@ public class ZeppelinConfiguration extends XMLConfiguration {
 
     if (url == null) {
       try {
-        Map procEnv = EnvironmentUtils.getProcEnvironment();
+        Map<String, String> procEnv = EnvironmentUtils.getProcEnvironment();
         if (procEnv.containsKey("ZEPPELIN_CONF_DIR")) {
-          String zconfDir = (String) procEnv.get("ZEPPELIN_CONF_DIR");
+          String zconfDir = procEnv.get("ZEPPELIN_CONF_DIR");
           File file = new File(zconfDir + File.separator + ZEPPELIN_SITE_XML);
           if (file.exists()) {
-            url = file.toURL();
+            url = file.toURI().toURL();
           }
         }
       } catch (IOException e) {
@@ -162,22 +161,22 @@ public class ZeppelinConfiguration extends XMLConfiguration {
       conf = new ZeppelinConfiguration();
     } else {
       try {
-        LOG.info("Load configuration from " + url);
+        LOG.info("Load configuration from {}", url);
         conf = new ZeppelinConfiguration(url);
       } catch (ConfigurationException e) {
-        LOG.warn("Failed to load configuration from " + url + " proceeding with a default", e);
+        LOG.warn("Failed to load configuration from {} proceeding with a default", url, e);
         conf = new ZeppelinConfiguration();
       }
     }
 
-    LOG.info("Server Host: " + conf.getServerAddress());
+    LOG.info("Server Host: {}", conf.getServerAddress());
     if (conf.useSsl() == false) {
-      LOG.info("Server Port: " + conf.getServerPort());
+      LOG.info("Server Port: {}", conf.getServerPort());
     } else {
-      LOG.info("Server SSL Port: " + conf.getServerSslPort());
+      LOG.info("Server SSL Port: {}", conf.getServerSslPort());
     }
-    LOG.info("Context Path: " + conf.getServerContextPath());
-    LOG.info("Zeppelin Version: " + Util.getVersion());
+    LOG.info("Context Path: {}", conf.getServerContextPath());
+    LOG.info("Zeppelin Version: {}", Util.getVersion());
 
     return conf;
   }
@@ -658,8 +657,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public String getConfigFSDir() {
     String fsConfigDir = getString(ConfVars.ZEPPELIN_CONFIG_FS_DIR);
     if (StringUtils.isBlank(fsConfigDir)) {
-      LOG.warn(ConfVars.ZEPPELIN_CONFIG_FS_DIR.varName + " is not specified, fall back to local " +
-          "conf directory " + ConfVars.ZEPPELIN_CONF_DIR.varName);
+      LOG.warn("{} is not specified, fall back to local conf directory {}", ConfVars.ZEPPELIN_CONFIG_FS_DIR.varName, ConfVars.ZEPPELIN_CONF_DIR.varName);
       return getConfDir();
     }
     if (getString(ConfVars.ZEPPELIN_CONFIG_STORAGE_CLASS)
@@ -674,7 +672,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public List<String> getAllowedOrigins()
   {
     if (getString(ConfVars.ZEPPELIN_ALLOWED_ORIGINS).isEmpty()) {
-      return Arrays.asList(new String[0]);
+      return Collections.emptyList();
     }
 
     return Arrays.asList(getString(ConfVars.ZEPPELIN_ALLOWED_ORIGINS).toLowerCase().split(","));
