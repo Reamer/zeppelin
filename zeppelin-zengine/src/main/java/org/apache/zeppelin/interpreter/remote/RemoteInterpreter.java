@@ -109,6 +109,7 @@ public class RemoteInterpreter extends Interpreter {
     return interpreterProcess;
   }
 
+  @Override
   public ManagedInterpreterGroup getInterpreterGroup() {
     return (ManagedInterpreterGroup) super.getInterpreterGroup();
   }
@@ -188,7 +189,7 @@ public class RemoteInterpreter extends Interpreter {
       isOpened = false;
       this.lifecycleManager.onInterpreterUse(this.getInterpreterGroup(), sessionId);
     } else {
-      LOGGER.warn("close is called when RemoterInterpreter is not opened for " + className);
+      LOGGER.warn("close is called when RemoterInterpreter is not opened for {}", className);
     }
   }
 
@@ -251,7 +252,7 @@ public class RemoteInterpreter extends Interpreter {
   @Override
   public void cancel(final InterpreterContext context) throws InterpreterException {
     if (!isOpened) {
-      LOGGER.warn("Cancel is called when RemoterInterpreter is not opened for " + className);
+      LOGGER.warn("Cancel is called when RemoterInterpreter is not opened for {}", className);
       return;
     }
     RemoteInterpreterProcess interpreterProcess = null;
@@ -287,18 +288,17 @@ public class RemoteInterpreter extends Interpreter {
     }
 
     this.lifecycleManager.onInterpreterUse(this.getInterpreterGroup(), sessionId);
-    FormType type = interpreterProcess.callRemoteFunction(client -> {
+    return interpreterProcess.callRemoteFunction(client -> {
           formType = FormType.valueOf(client.getFormType(sessionId, className));
           return formType;
     });
-    return type;
   }
 
 
   @Override
   public int getProgress(final InterpreterContext context) throws InterpreterException {
     if (!isOpened) {
-      LOGGER.warn("getProgress is called when RemoterInterpreter is not opened for " + className);
+      LOGGER.warn("getProgress is called when RemoterInterpreter is not opened for {}", className);
       return 0;
     }
     RemoteInterpreterProcess interpreterProcess = null;
@@ -333,7 +333,7 @@ public class RemoteInterpreter extends Interpreter {
 
   public String getStatus(final String jobId) {
     if (!isOpened) {
-      LOGGER.warn("getStatus is called when RemoteInterpreter is not opened for " + className);
+      LOGGER.warn("getStatus is called when RemoteInterpreter is not opened for {}", className);
       return Job.Status.UNKNOWN.name();
     }
     RemoteInterpreterProcess interpreterProcess = null;

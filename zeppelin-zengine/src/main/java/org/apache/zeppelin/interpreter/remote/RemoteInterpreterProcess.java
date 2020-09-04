@@ -53,7 +53,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     this.intpEventServerHost = intpEventServerHost;
     this.intpEventServerPort = intpEventServerPort;
     this.startTime = START_TIME_FORMATTER.format(new Date());
-    this.remoteClient = new PooledRemoteClient<Client>(() -> {
+    this.remoteClient = new PooledRemoteClient<>(() -> {
       TSocket transport = new TSocket(getHost(), getPort());
       try {
         transport.open();
@@ -89,7 +89,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
                                         String noteId,
                                         String paragraphId,
                                         Object o) {
-    remoteClient.callRemoteFunction((PooledRemoteClient.RemoteFunction<Void, Client>) client -> {
+    remoteClient.callRemoteFunction(client -> {
        client.angularObjectUpdate(name, noteId, paragraphId, GSON.toJson(o));
        return null;
     });
