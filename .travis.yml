@@ -181,7 +181,6 @@ jobs:
         - source ~/.environ
       install:
         - mvn clean install -DskipTests -DskipRat -pl ${INTERPRETERS} -Pspark-2.3 -Phadoop2 -Phelium-dev -Pexamples -Pintegration -Pspark-scala-2.11 -B
-        - mvn clean package -T 2C -pl zeppelin-plugins -amd -B
       before_script:
         - travis_retry ./testing/downloadSpark.sh $SPARK_VER $HADOOP_VER
         - export SPARK_HOME=`pwd`/spark-$SPARK_VER-bin-hadoop$HADOOP_VER
