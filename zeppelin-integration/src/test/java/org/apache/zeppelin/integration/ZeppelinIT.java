@@ -125,8 +125,8 @@ public class ZeppelinIT extends AbstractZeppelinIT {
       /*
        * Register watcher
        * z.angularWatch("myVar", (before:Object, after:Object, context:org.apache.zeppelin.interpreter.InterpreterContext) => {
-       *   z.run(2, context)
-       * }
+       *   z.run(2, false)
+       * })
        */
       setTextOfParagraph(4, "z.angularWatch(\"myVar\", (before:Object, after:Object, context:org.apache.zeppelin.interpreter.InterpreterContext)=>{ z.run(2, false)})");
       runParagraph(4);
