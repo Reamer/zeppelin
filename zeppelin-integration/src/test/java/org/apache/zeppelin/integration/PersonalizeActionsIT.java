@@ -16,14 +16,15 @@
  */
 package org.apache.zeppelin.integration;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.AbstractZeppelinIT;
-import org.apache.zeppelin.integration.AuthenticationIT;
 import org.apache.zeppelin.WebDriverManager;
 import org.apache.zeppelin.ZeppelinITUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -33,22 +34,13 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
-
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.commons.io.FileUtils;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import static org.junit.Assert.assertTrue;
 
 public class PersonalizeActionsIT extends AbstractZeppelinIT {
   private static final Logger LOG = LoggerFactory.getLogger(PersonalizeActionsIT.class);
@@ -235,7 +227,6 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
           CoreMatchers.equalTo("fa fa-bar-chart"));
 
       authenticationIT.logoutUser("admin");
-      driver.navigate().refresh();
 
       // step 2 : (user1) make sure it is on personalized mode and active graph is 'Bar chart',
       // try to change active graph to 'Table' and then check result
@@ -263,7 +254,7 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
               "'btn btn-default btn-sm ng-binding ng-scope active')]//i")).getAttribute("class"),
           CoreMatchers.equalTo("fa fa-table"));
       authenticationIT.logoutUser("user1");
-      driver.navigate().refresh();
+
 
       // step 3: (admin) Admin view is still table because of it's personalized!
       authenticationIT.authenticationUser("admin", "password1");

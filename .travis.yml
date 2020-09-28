@@ -168,7 +168,11 @@ jobs:
       jdk: "openjdk8"
       dist: xenial
       addons:
-        firefox: "71.0"
+        chrome: stable
+        apt:
+          update: true
+          packages:
+          - chromium-chromedriver
       services:
         - xvfb
       before_install:

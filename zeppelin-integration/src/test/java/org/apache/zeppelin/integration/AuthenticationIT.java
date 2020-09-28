@@ -16,8 +16,6 @@
  */
 package org.apache.zeppelin.integration;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -35,6 +33,7 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -131,20 +130,6 @@ public class AuthenticationIT extends AbstractZeppelinIT {
     ZeppelinITUtils.sleep(1000, false);
   }
 
-  private void testShowNotebookListOnNavbar() throws Exception {
-    try {
-      pollingWait(By.xpath("//li[@class='dropdown notebook-list-dropdown']"),
-          MAX_BROWSER_TIMEOUT_SEC).click();
-      assertTrue(driver.findElements(By.xpath("//a[@class=\"notebook-list-item ng-scope\"]")).size() > 0);
-      pollingWait(By.xpath("//li[@class='dropdown notebook-list-dropdown']"),
-              MAX_BROWSER_TIMEOUT_SEC).click();
-      pollingWait(By.xpath("//li[@class='dropdown notebook-list-dropdown']"),
-              MAX_BROWSER_TIMEOUT_SEC).click();
-    } catch (Exception e) {
-      handleException("Exception in ParagraphActionsIT while testShowNotebookListOnNavbar ", e);
-    }
-  }
-
   public void logoutUser(String userName) throws URISyntaxException {
     ZeppelinITUtils.sleep(500, false);
     driver.findElement(By.xpath("//div[contains(@class, 'navbar-collapse')]//li[contains(.,'" +
@@ -161,7 +146,7 @@ public class AuthenticationIT extends AbstractZeppelinIT {
     ZeppelinITUtils.sleep(500, false);
   }
 
-  //  @Test
+  @Ignore
   public void testSimpleAuthentication() throws Exception {
     try {
       AuthenticationIT authenticationIT = new AuthenticationIT();

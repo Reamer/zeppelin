@@ -17,7 +17,12 @@
 
 package org.apache.zeppelin.integration;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
+
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.zeppelin.AbstractZeppelinIT;
@@ -39,10 +44,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test Zeppelin with web browser.

@@ -18,15 +18,20 @@
 package org.apache.zeppelin;
 
 
-import com.google.common.base.Function;
+import java.io.File;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogEntry;
-import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
@@ -34,9 +39,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Function;
 
 abstract public class AbstractZeppelinIT {
   protected static WebDriver driver;
@@ -95,11 +98,12 @@ abstract public class AbstractZeppelinIT {
 
   protected WebElement pollingWait(final By locator, final long timeWait) {
     Wait<WebDriver> wait = new FluentWait<>(driver)
-        .withTimeout(Duration.of(timeWait, ChronoUnit.SECONDS))
-        .pollingEvery(Duration.of(1, ChronoUnit.SECONDS))
+        .withTimeout(Duration.ofSeconds(timeWait))
+        .pollingEvery(Duration.ofSeconds(1))
         .ignoring(NoSuchElementException.class);
 
     return wait.until(new Function<WebDriver, WebElement>() {
+      @Override
       public WebElement apply(WebDriver driver) {
         return driver.findElement(locator);
       }
