@@ -21,7 +21,6 @@ before_cache:
     - rm -rf $HOME/.m2/repository/org/apache/zeppelin/
 
 cache:
-  apt: true
   directories:
     - ${HOME}/.m2
     -  zeppelin-web/node
