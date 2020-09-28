@@ -17,12 +17,17 @@
 
 package org.apache.zeppelin.integration;
 
+import java.io.IOException;
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.WebDriverManager;
 import org.apache.zeppelin.ZeppelinITUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -55,14 +60,25 @@ public class ZeppelinIT extends AbstractZeppelinIT {
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
+  private static ExecuteWatchdog zeppelinProcess;
+
+  @BeforeClass
+  public static void startUp() throws ExecuteException, IOException {
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    zeppelinProcess.destroyProcess();
+  }
 
   @Before
-  public void startUp() {
+  public void beforeTest() {
     driver = WebDriverManager.getWebDriver();
   }
 
   @After
-  public void tearDown() {
+  public void afterTest() {
     driver.quit();
   }
 

@@ -20,33 +20,33 @@ package org.apache.zeppelin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteResultHandler;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.openqa.selenium.WebDriver;
+
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class ZeppelinITUtils {
 
-  public final static Logger LOG = LoggerFactory.getLogger(ZeppelinITUtils.class);
+  public final static Logger LOGGER = LoggerFactory.getLogger(ZeppelinITUtils.class);
 
   public static void sleep(long millis, boolean logOutput) {
     if (logOutput) {
-      LOG.info("Starting sleeping for " + (millis / 1000) + " seconds...");
-      LOG.info("Caller: " + Thread.currentThread().getStackTrace()[2]);
+      LOGGER.info("Starting sleeping for " + (millis / 1000) + " seconds...");
+      LOGGER.info("Caller: " + Thread.currentThread().getStackTrace()[2]);
     }
     try {
       Thread.sleep(millis);
     } catch (InterruptedException e) {
-      LOG.error("Exception in WebDriverManager while getWebDriver ", e);
+      LOGGER.error("Exception in WebDriverManager while getWebDriver ", e);
     }
     if (logOutput) {
-      LOG.info("Finished.");
+      LOGGER.info("Finished.");
     }
-  }
-
-  public static void restartZeppelin() {
-    CommandExecutor.executeCommandLocalHost("../bin/zeppelin-daemon.sh restart",
-        false, ProcessData.Types_Of_Data.OUTPUT);
-    //wait for server to start.
-    sleep(5000, false);
   }
 
   public static void turnOffImplicitWaits(WebDriver driver) {
@@ -56,5 +56,24 @@ public class ZeppelinITUtils {
   public static void turnOnImplicitWaits(WebDriver driver) {
     driver.manage().timeouts().implicitlyWait(AbstractZeppelinIT.MAX_IMPLICIT_WAIT,
         TimeUnit.SECONDS);
+  }
+
+  public static ExecuteWatchdog startZeppelin() throws ExecuteException, IOException {
+    CommandLine cmdLine = CommandLine.parse("../bin/zeppelin.sh");
+    DefaultExecutor executor = new DefaultExecutor();
+    ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
+    executor.setWatchdog(watchdog);
+    executor.execute(cmdLine, new ExecuteResultHandler() {
+      @Override
+      public void onProcessComplete(int i) {
+        LOGGER.info("Zeppelin Server completed without errors");
+      }
+
+      @Override
+      public void onProcessFailed(ExecuteException e) {
+        LOGGER.debug("Zeppelin Server process failed", e);
+      }
+    });
+    return watchdog;
   }
 }

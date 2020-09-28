@@ -18,7 +18,6 @@ package org.apache.zeppelin.integration;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.CommandExecutor;
-import org.apache.zeppelin.ProcessData;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.WebDriverManager;
 import org.apache.zeppelin.ZeppelinITUtils;
@@ -37,7 +36,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +49,8 @@ import static org.junit.Assert.assertTrue;
 
 public class InterpreterModeActionsIT extends AbstractZeppelinIT {
   private static final Logger LOGGER = LoggerFactory.getLogger(InterpreterModeActionsIT.class);
+
+  private static ExecuteWatchdog zeppelinProcess;
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
@@ -73,12 +75,12 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
   static String interpreterOptionPath = "";
   static String originalInterpreterOption = "";
 
-  static String cmdPsPython = "ps aux | grep 'kernel_server.py' | grep -v 'grep' | wc -l";
-  static String cmdPsInterpreter = "ps aux | grep 'zeppelin/interpreter/python/*' |" +
+  private static final String CMD_PS_PYTHON = "ps aux | grep 'kernel_server.py' | grep -v 'grep' | wc -l";
+  private static final String CMD_PS_INTERPRETER = "ps aux | grep 'zeppelin/interpreter/python/*' |" +
       " sed -E '/grep|local-repo/d' | wc -l";
 
   @BeforeClass
-  public static void startUp() {
+  public static void startUp() throws ExecuteException, IOException {
     try {
       System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_HOME.getVarName(), new File("../").getAbsolutePath());
       ZeppelinConfiguration conf = ZeppelinConfiguration.create();
@@ -97,7 +99,7 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOGGER.error("Error in InterpreterModeActionsIT startUp::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
   }
 
@@ -123,8 +125,8 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOGGER.error("Error in InterpreterModeActionsIT tearDown::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
     driver.quit();
+    zeppelinProcess.destroyProcess();
   }
 
   private void authenticationUser(String userName, String password) {
@@ -212,12 +214,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
           driver.findElement(By.xpath(
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user1"));
-      String resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      String resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
 
@@ -243,12 +243,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
           driver.findElement(By.xpath(
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user2"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -275,12 +273,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         collector.checkThat("Exception in InterpreterModeActionsIT while running Python Paragraph",
             "ERROR", CoreMatchers.equalTo("FINISHED"));
       }
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
 
@@ -302,12 +298,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
       if (element.isDisplayed()) {
         clickAndWait(By.xpath("//*[@id='actionbar']//span[contains(@uib-tooltip, 'Interpreter binding')]"));
       }
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("0"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("0"));
       interpreterModeActionsIT.logoutUser("user1");
@@ -371,12 +365,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user1"));
 
-      String resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      String resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user1");
@@ -403,12 +395,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user2"));
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("2"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -458,12 +448,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         clickAndWait(By.xpath("//*[@id='actionbar']//span[contains(@uib-tooltip, 'Interpreter binding')]"));
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user1");
@@ -497,12 +485,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         clickAndWait(By.xpath("//*[@id='actionbar']//span[contains(@uib-tooltip, 'Interpreter binding')]"));
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("0"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("0"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -546,12 +532,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         collector.checkThat("Exception in InterpreterModeActionsIT while running Python Paragraph",
             "ERROR", CoreMatchers.equalTo("FINISHED"));
       }
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("2"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -581,12 +565,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         assertTrue("interpreter setting dialog visibility status", invisibilityStatus);
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("0"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("0"));
 
@@ -647,12 +629,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user1"));
 
-      String resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      String resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user1");
@@ -680,12 +660,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
               getParagraphXPath(2) + "//div[contains(@class, 'text plainTextContent')]")).getText(),
           CoreMatchers.equalTo("user2"));
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("2"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("2"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -736,12 +714,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         clickAndWait(By.xpath("//*[@id='actionbar']//span[contains(@uib-tooltip, 'Interpreter binding')]"));
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("1"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("1"));
       interpreterModeActionsIT.logoutUser("user1");
@@ -776,12 +752,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         clickAndWait(By.xpath("//*[@id='actionbar']//span[contains(@uib-tooltip, 'Interpreter binding')]"));
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("0"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("0"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -825,12 +799,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         collector.checkThat("Exception in InterpreterModeActionsIT while running Python Paragraph",
             "ERROR", CoreMatchers.equalTo("FINISHED"));
       }
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("2"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("2"));
       interpreterModeActionsIT.logoutUser("user2");
@@ -860,12 +832,10 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         assertTrue("interpreter setting dialog visibility status", invisibilityStatus);
       }
 
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsPython,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_PYTHON);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python process is", resultProcessNum, CoreMatchers.equalTo("0"));
-      resultProcessNum = (String) CommandExecutor.executeCommandLocalHost(cmdPsInterpreter,
-          false, ProcessData.Types_Of_Data.OUTPUT);
+      resultProcessNum = CommandExecutor.executeCommandLocalHost(CMD_PS_INTERPRETER);
       resultProcessNum = resultProcessNum.trim().replaceAll("\n", "");
       collector.checkThat("The number of python interpreter process is", resultProcessNum, CoreMatchers.equalTo("0"));
       interpreterModeActionsIT.logoutUser("admin");

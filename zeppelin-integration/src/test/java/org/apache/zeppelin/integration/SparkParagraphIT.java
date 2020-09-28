@@ -17,12 +17,16 @@
 
 package org.apache.zeppelin.integration;
 
-
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.WebDriverManager;
+import org.apache.zeppelin.ZeppelinITUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -30,24 +34,37 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 
+import java.io.IOException;
 import java.util.List;
 
 public class SparkParagraphIT extends AbstractZeppelinIT {
 
+  private static ExecuteWatchdog zeppelinProcess;
+
   @Rule
   public ErrorCollector collector = new ErrorCollector();
 
-  @Before
-  public void startUp() {
+  @BeforeClass
+  public static void startUp() throws ExecuteException, IOException {
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    driver.quit();
+    zeppelinProcess.destroyProcess();
+  }
+
+  @Before
+  public void startUpTest() {
     createNewNote();
     waitForParagraph(1, "READY");
   }
 
   @After
-  public void tearDown() {
+  public void tearDownTest() {
     deleteTestNotebook(driver);
-    driver.quit();
   }
 
   @Test

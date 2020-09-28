@@ -18,13 +18,17 @@
 package org.apache.zeppelin.integration;
 
 
+import java.io.IOException;
+
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.WebDriverManager;
 import org.apache.zeppelin.ZeppelinITUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -39,18 +43,21 @@ import org.slf4j.LoggerFactory;
 public class ParagraphActionsIT extends AbstractZeppelinIT {
   private static final Logger LOG = LoggerFactory.getLogger(ParagraphActionsIT.class);
 
+  private static ExecuteWatchdog zeppelinProcess;
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
 
-  @Before
-  public void startUp() {
+  @BeforeClass
+  public static void startUp() throws ExecuteException, IOException {
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
   }
 
-  @After
-  public void tearDown() {
+  @AfterClass
+  public static void tearDown() {
     driver.quit();
+    zeppelinProcess.destroyProcess();
   }
 
   @Test

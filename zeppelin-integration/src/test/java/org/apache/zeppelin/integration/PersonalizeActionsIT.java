@@ -16,6 +16,10 @@
  */
 package org.apache.zeppelin.integration;
 
+import java.io.IOException;
+
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.integration.AuthenticationIT;
@@ -48,6 +52,8 @@ import static org.junit.Assert.assertTrue;
 public class PersonalizeActionsIT extends AbstractZeppelinIT {
   private static final Logger LOG = LoggerFactory.getLogger(PersonalizeActionsIT.class);
 
+  private static ExecuteWatchdog zeppelinProcess;
+
   @Rule
   public ErrorCollector collector = new ErrorCollector();
   static String shiroPath;
@@ -70,7 +76,7 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
   static String originalShiro = "";
 
   @BeforeClass
-  public static void startUp() {
+  public static void startUp() throws ExecuteException, IOException {
     try {
       System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_HOME.getVarName(), new File("../").getAbsolutePath());
       ZeppelinConfiguration conf = ZeppelinConfiguration.create();
@@ -83,7 +89,7 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOG.error("Error in PersonalizeActionsIT startUp::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
   }
 
@@ -101,8 +107,8 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOG.error("Error in PersonalizeActionsIT tearDown::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
     driver.quit();
+    zeppelinProcess.destroyProcess();
   }
 
   private void setParagraphText(String text) {

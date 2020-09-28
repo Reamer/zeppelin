@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.AbstractZeppelinIT;
@@ -48,6 +51,8 @@ import org.slf4j.LoggerFactory;
  */
 public class AuthenticationIT extends AbstractZeppelinIT {
   private static final Logger LOG = LoggerFactory.getLogger(AuthenticationIT.class);
+
+  private static ExecuteWatchdog zeppelinProcess;
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
@@ -78,7 +83,7 @@ public class AuthenticationIT extends AbstractZeppelinIT {
 
 
   @BeforeClass
-  public static void startUp() {
+  public static void startUp() throws ExecuteException, IOException {
     try {
       System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_HOME.getVarName(), new File("../").getAbsolutePath());
       ZeppelinConfiguration conf = ZeppelinConfiguration.create();
@@ -91,7 +96,7 @@ public class AuthenticationIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOG.error("Error in AuthenticationIT startUp::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
   }
 
@@ -110,7 +115,7 @@ public class AuthenticationIT extends AbstractZeppelinIT {
     } catch (IOException e) {
       LOG.error("Error in AuthenticationIT tearDown::", e);
     }
-    ZeppelinITUtils.restartZeppelin();
+    zeppelinProcess.destroyProcess();
     driver.quit();
   }
 
@@ -201,7 +206,7 @@ public class AuthenticationIT extends AbstractZeppelinIT {
               "//div[@id='main']/div/div[2]"),
               MIN_IMPLICIT_WAIT).isDisplayed())
       );
-      
+
       authenticationIT.logoutUser("finance1");
 
       authenticationIT.authenticationUser("hr1", "hr1");

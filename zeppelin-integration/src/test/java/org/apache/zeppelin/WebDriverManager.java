@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
@@ -111,14 +112,22 @@ public class WebDriverManager {
       }
     }
 
+    long start = System.currentTimeMillis();
     String url;
     if (System.getenv("url") != null) {
       url = System.getenv("url");
     } else {
       url = "http://localhost:8080";
+      // Wait 10 seconds for the Zeppelin server to open the port
+      while (System.currentTimeMillis() - start < 10 * 1000 ) {
+        try (Socket ignored = new Socket("localhost", 8080)) {
+          break;
+        } catch (IOException ignored) {
+          ZeppelinITUtils.sleep(100, false);
+        }
+      }
     }
 
-    long start = System.currentTimeMillis();
     boolean loaded = false;
     driver.manage().timeouts().implicitlyWait(AbstractZeppelinIT.MAX_IMPLICIT_WAIT,
         TimeUnit.SECONDS);
@@ -200,8 +209,8 @@ public class WebDriverManager {
       if (System.getProperty("os.name").startsWith("Mac OS")) {
         firefoxVersionCmd = "/Applications/Firefox.app/Contents/MacOS/" + firefoxVersionCmd;
       }
-      String versionString = (String) CommandExecutor
-          .executeCommandLocalHost(firefoxVersionCmd, false, ProcessData.Types_Of_Data.OUTPUT);
+      String versionString = CommandExecutor
+          .executeCommandLocalHost(firefoxVersionCmd);
       return Integer
           .valueOf(versionString.replaceAll("Mozilla Firefox", "").trim().substring(0, 2));
     } catch (Exception e) {

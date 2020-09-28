@@ -17,33 +17,40 @@
 
 package org.apache.zeppelin.integration;
 
+import java.io.IOException;
+
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.WebDriverManager;
+import org.apache.zeppelin.ZeppelinITUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class InterpreterIT extends AbstractZeppelinIT {
+
+  private static ExecuteWatchdog zeppelinProcess;
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
 
-  @Before
-  public void startUp() {
+  @BeforeClass
+  public static void startUp() throws ExecuteException, IOException {
+    zeppelinProcess = ZeppelinITUtils.startZeppelin();
     driver = WebDriverManager.getWebDriver();
   }
 
-  @After
-  public void tearDown() {
+  @AfterClass
+  public static void tearDown() {
     driver.quit();
+    zeppelinProcess.destroyProcess();
   }
 
   @Test
@@ -65,7 +72,6 @@ public class InterpreterIT extends AbstractZeppelinIT {
       collector.checkThat("description of interpreter property is displayed",
           driver.findElement(By.xpath("//tr/td[contains(text(), 'spark.app.name')]/following-sibling::td[2]")).getText(),
           CoreMatchers.equalTo("The name of spark application."));
-
     } catch (Exception e) {
       handleException("Exception in InterpreterIT while testShowDescriptionOnInterpreterCreate ", e);
     }
