@@ -32,6 +32,7 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
@@ -49,9 +50,12 @@ abstract public class AbstractZeppelinIT {
   protected static final long MAX_IMPLICIT_WAIT = 30;
   protected static final long MAX_BROWSER_TIMEOUT_SEC = 30;
   protected static final long MAX_PARAGRAPH_TIMEOUT_SEC = 120;
+  Actions action = new Actions(driver);
 
   protected void setTextOfParagraph(int paragraphNo, String text) {
-    String editorId = driver.findElement(By.xpath(getParagraphXPath(paragraphNo) + "//div[contains(@class, 'editor')]")).getAttribute("id");
+    String editorId = pollingWait(
+        By.xpath(getParagraphXPath(paragraphNo) + "//div[contains(@class, 'editor')]"),
+        MIN_IMPLICIT_WAIT).getAttribute("id");
     if (driver instanceof JavascriptExecutor) {
       ((JavascriptExecutor) driver).executeScript("ace.edit('" + editorId + "'). setValue('" + text + "')");
     } else {
@@ -141,7 +145,8 @@ abstract public class AbstractZeppelinIT {
   }
 
   protected void clickAndWait(final By locator) {
-    pollingWait(locator, MAX_IMPLICIT_WAIT).click();
+    WebElement element = pollingWait(locator, MAX_IMPLICIT_WAIT);
+    action.moveToElement(element).click().build().perform();
     ZeppelinITUtils.sleep(1000, false);
   }
 
