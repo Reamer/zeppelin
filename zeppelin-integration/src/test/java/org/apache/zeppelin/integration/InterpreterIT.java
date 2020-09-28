@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class InterpreterIT extends AbstractZeppelinIT {
-  private static final Logger LOG = LoggerFactory.getLogger(InterpreterIT.class);
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();

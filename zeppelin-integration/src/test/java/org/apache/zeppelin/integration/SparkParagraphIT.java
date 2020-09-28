@@ -29,13 +29,10 @@ import org.junit.rules.ErrorCollector;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class SparkParagraphIT extends AbstractZeppelinIT {
-  private static final Logger LOG = LoggerFactory.getLogger(SparkParagraphIT.class);
 
   @Rule
   public ErrorCollector collector = new ErrorCollector();
