@@ -43,7 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertTrue;
 
@@ -55,7 +55,7 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
   @Rule
   public ErrorCollector collector = new ErrorCollector();
   static String shiroPath;
-  static String authShiro = "[users]\n" +
+  static final String authShiro = "[users]\n" +
       "admin = password1, admin\n" +
       "user1 = password2, admin\n" +
       "user2 = password3, admin\n" +
@@ -86,15 +86,16 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
       ZeppelinConfiguration conf = ZeppelinConfiguration.create();
       shiroPath = conf.getRelativeDir(String.format("%s/shiro.ini", conf.getConfDir()));
       interpreterOptionPath = conf.getRelativeDir(String.format("%s/interpreter.json", conf.getConfDir()));
+
       File shiroFile = new File(shiroPath);
       if (shiroFile.exists()) {
-        originalShiro = StringUtils.join(FileUtils.readLines(shiroFile, "UTF-8"), "\n");
+        originalShiro = FileUtils.readFileToString(shiroFile, StandardCharsets.UTF_8);
       }
-      FileUtils.write(shiroFile, authShiro, "UTF-8");
+      FileUtils.write(shiroFile, authShiro, StandardCharsets.UTF_8);
 
       File interpreterOptionFile = new File(interpreterOptionPath);
       if (interpreterOptionFile.exists()) {
-        originalInterpreterOption = StringUtils.join(FileUtils.readLines(interpreterOptionFile, "UTF-8"), "\n");
+        originalInterpreterOption = FileUtils.readFileToString(interpreterOptionFile, StandardCharsets.UTF_8);
       }
     } catch (IOException e) {
       LOGGER.error("Error in InterpreterModeActionsIT startUp::", e);
@@ -111,7 +112,7 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         if (StringUtils.isBlank(originalShiro)) {
           FileUtils.deleteQuietly(shiroFile);
         } else {
-          FileUtils.write(shiroFile, originalShiro, "UTF-8");
+          FileUtils.write(shiroFile, originalShiro, StandardCharsets.UTF_8);
         }
       }
       if (!StringUtils.isBlank(interpreterOptionPath)) {
@@ -119,7 +120,7 @@ public class InterpreterModeActionsIT extends AbstractZeppelinIT {
         if (StringUtils.isBlank(originalInterpreterOption)) {
           FileUtils.deleteQuietly(interpreterOptionFile);
         } else {
-          FileUtils.write(interpreterOptionFile, originalInterpreterOption, "UTF-8");
+          FileUtils.write(interpreterOptionFile, originalInterpreterOption, StandardCharsets.UTF_8);
         }
       }
     } catch (IOException e) {

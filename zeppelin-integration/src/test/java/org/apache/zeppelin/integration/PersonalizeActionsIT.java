@@ -17,6 +17,7 @@
 package org.apache.zeppelin.integration;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
@@ -57,7 +58,7 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
   @Rule
   public ErrorCollector collector = new ErrorCollector();
   static String shiroPath;
-  static String authShiro = "[users]\n" +
+  static final String authShiro = "[users]\n" +
       "admin = password1, admin\n" +
       "user1 = password2, user\n" +
       "[main]\n" +
@@ -83,9 +84,9 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
       shiroPath = conf.getRelativeDir(String.format("%s/shiro.ini", conf.getConfDir()));
       File file = new File(shiroPath);
       if (file.exists()) {
-        originalShiro = StringUtils.join(FileUtils.readLines(file, "UTF-8"), "\n");
+        originalShiro = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
       }
-      FileUtils.write(file, authShiro, "UTF-8");
+      FileUtils.write(file, authShiro, StandardCharsets.UTF_8);
     } catch (IOException e) {
       LOG.error("Error in PersonalizeActionsIT startUp::", e);
     }
@@ -101,7 +102,7 @@ public class PersonalizeActionsIT extends AbstractZeppelinIT {
         if (StringUtils.isBlank(originalShiro)) {
           FileUtils.deleteQuietly(file);
         } else {
-          FileUtils.write(file, originalShiro, "UTF-8");
+          FileUtils.write(file, originalShiro, StandardCharsets.UTF_8);
         }
       }
     } catch (IOException e) {
