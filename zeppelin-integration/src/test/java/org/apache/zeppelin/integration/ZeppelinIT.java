@@ -33,6 +33,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -83,6 +84,7 @@ public class ZeppelinIT extends AbstractZeppelinIT {
   }
 
   @Test
+  @Ignore
   public void testAngularDisplay() throws Exception {
     try {
       createNewNote();
@@ -282,6 +284,7 @@ public class ZeppelinIT extends AbstractZeppelinIT {
   }
 
   @Test
+  @Ignore
   public void testAngularRunParagraph() throws Exception {
     try {
       createNewNote();
