@@ -85,6 +85,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
   private StatusChangedListener afterStatusChangedListener;
   private QuartzSchedulerService schedulerService;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_PUBLIC.getVarName(), "true");
@@ -105,6 +106,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
     schedulerService.waitForFinishInit();
   }
 
+  @Override
   @After
   public void tearDown() throws Exception {
     super.tearDown();
@@ -1220,7 +1222,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
   }
 
   @Test
-  public void testPerSessionInterpreterCloseOnNoteRemoval() throws IOException, InterpreterException {
+  public void testPerSessionInterpreterCloseOnNoteRemoval() throws IOException, InterpreterException, InterruptedException {
     // create a notes
     Note note1 = notebook.createNote("note1", anonymous);
     Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -1232,7 +1234,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
       setting.getOption().setPerNote(setting.getOption().SCOPED);
       notebook.getInterpreterSettingManager().restart(setting.getId());
     }
-
+    Thread.sleep(2000);
     note1.run(p1.getId());
     while (p1.getStatus() != Status.FINISHED) Thread.yield();
     InterpreterResult result = p1.getReturn();
@@ -1252,7 +1254,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
   }
 
   @Test
-  public void testPerSessionInterpreter() throws IOException, InterpreterException {
+  public void testPerSessionInterpreter() throws IOException, InterpreterException, InterruptedException {
     // create two notes
     Note note1 = notebook.createNote("note1", anonymous);
     Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -1280,7 +1282,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
       setting.getOption().setPerNote(InterpreterOption.SCOPED);
       notebook.getInterpreterSettingManager().restart(setting.getId());
     }
-
+    Thread.sleep(2000);
     // run per note session enabled
     note1.run(p1.getId());
     note2.run(p2.getId());
@@ -1296,7 +1298,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
 
 
   @Test
-  public void testPerNoteSessionInterpreter() throws IOException, InterpreterException {
+  public void testPerNoteSessionInterpreter() throws IOException, InterpreterException, InterruptedException {
     // create two notes
     Note note1 = notebook.createNote("note1", anonymous);
     Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -1323,7 +1325,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
       setting.getOption().setPerNote(InterpreterOption.SCOPED);
       notebook.getInterpreterSettingManager().restart(setting.getId());
     }
-
+    Thread.sleep(2000);
     // run per note session enabled
     note1.run(p1.getId());
     note2.run(p2.getId());
