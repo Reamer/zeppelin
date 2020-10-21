@@ -689,7 +689,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
       }
     }
   }
-  
+
   private void verifySparkVersionNumber() throws IOException {
     Note note = null;
     try {
@@ -1083,13 +1083,13 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
       note.run(p1.getId(), true);
       assertEquals(Status.ERROR, p1.getStatus());
       assertTrue("Actual error message: " + p1.getReturn().message().get(0).getData(),
-              p1.getReturn().message().get(0).getData().contains("No such file or directory"));
+              p1.getReturn().message().get(0).getData().contains("java.io.IOException"));
 
       // run it again, and get the same error
       note.run(p1.getId(), true);
       assertEquals(Status.ERROR, p1.getStatus());
       assertTrue("Actual error message: " + p1.getReturn().message().get(0).getData(),
-              p1.getReturn().message().get(0).getData().contains("No such file or directory"));
+              p1.getReturn().message().get(0).getData().contains("java.io.IOException"));
     } finally {
       if (null != note) {
         TestUtils.getInstance(Notebook.class).removeNote(note, anonymous);

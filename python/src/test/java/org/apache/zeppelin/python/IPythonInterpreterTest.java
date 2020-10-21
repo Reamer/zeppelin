@@ -475,7 +475,7 @@ public class IPythonInterpreterTest extends BasePythonInterpreterTest {
       fail("Should not be able to start IPythonInterpreter");
     } catch (InterpreterException e) {
       String exceptionMsg = ExceptionUtils.getStackTrace(e);
-      assertTrue(exceptionMsg, exceptionMsg.contains("No such file or directory"));
+      assertTrue(exceptionMsg, exceptionMsg.contains("java.io.IOException"));
     }
   }
 

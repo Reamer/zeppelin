@@ -89,7 +89,7 @@ public class IRKernelTest {
     assertEquals(1, resultMessages.size());
     assertEquals(result.toString(), InterpreterResult.Type.TEXT, resultMessages.get(0).getType());
     assertTrue(resultMessages.toString(),
-            resultMessages.get(0).getData().contains("object 'unknown_var' not found"));
+            resultMessages.get(0).getData().contains("'unknown_var'"));
 
     context = getInterpreterContext();
     result = interpreter.interpret("foo <- TRUE\n" +
