@@ -38,28 +38,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>zeppelin-interpreter-shaded</artifactId>
       <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>zeppelin-interpreter</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
 
     <dependency>
