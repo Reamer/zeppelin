@@ -1074,7 +1074,6 @@
         <executions>
           <execution>
             <id>checkstyle-fail-build</id>
-            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
@@ -1085,7 +1084,6 @@
           </execution>
           <execution>
             <id>checkstyle-gen-html-report</id>
-            <phase>install</phase>
             <goals>
               <goal>checkstyle-aggregate</goal>
             </goals>
