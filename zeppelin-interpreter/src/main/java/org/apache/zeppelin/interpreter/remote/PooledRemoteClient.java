@@ -17,6 +17,7 @@
 
 package org.apache.zeppelin.interpreter.remote;
 
+import java.io.Closeable;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.thrift.TException;
@@ -31,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T>
  */
-public class PooledRemoteClient<T extends TServiceClient> {
+public class PooledRemoteClient<T extends TServiceClient> implements Closeable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PooledRemoteClient.class);
   private static final int RETRY_COUNT = 3;
@@ -52,11 +53,11 @@ public class PooledRemoteClient<T extends TServiceClient> {
   }
 
   public synchronized T getClient() throws Exception {
-    T t = clientPool.borrowObject(5_000);
-    return t;
+    return clientPool.borrowObject(5_000);
   }
 
-  public void shutdown() {
+  @Override
+  public void close() {
     // Close client socket connection
     if (remoteClientFactory != null) {
       remoteClientFactory.close();

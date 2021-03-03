@@ -44,6 +44,7 @@ import org.apache.zeppelin.resource.ResourceSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ import java.util.Map;
  * All the methods are synchronized because thrift client is not thread safe.
  */
 public class RemoteInterpreterEventClient implements ResourcePoolConnector,
-    AngularObjectRegistryListener {
+    AngularObjectRegistryListener, Closeable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteInterpreterEventClient.class);
   private static final Gson GSON = new Gson();
 
@@ -396,5 +397,10 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
     } catch (Exception e) {
       LOGGER.warn("Fail to updateParagraphConfig", e);
     }
+  }
+
+  @Override
+  public void close() {
+    remoteClient.close();
   }
 }

@@ -22,13 +22,15 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.thrift.TServiceClient;
 
+import java.io.Closeable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Factory class for creating thrift socket client.
  */
-public class RemoteClientFactory<T extends TServiceClient> extends BasePooledObjectFactory<T>{
+public class RemoteClientFactory<T extends TServiceClient> extends BasePooledObjectFactory<T>
+    implements Closeable {
 
 
   private Set<T> clientSockets = ConcurrentHashMap.newKeySet();
@@ -38,6 +40,7 @@ public class RemoteClientFactory<T extends TServiceClient> extends BasePooledObj
     this.supplier = supplier;
   }
 
+  @Override
   public void close() {
     for (T clientSocket: clientSockets) {
       clientSocket.getInputProtocol().getTransport().close();
