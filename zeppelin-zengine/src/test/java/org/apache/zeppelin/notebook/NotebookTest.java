@@ -836,9 +836,9 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
     config.put("cron", "* * * * * ?");
     note.setConfig(config);
 
-    final int jobsBeforeRefresh = schedulerService.getJobs().size();
+    final int jobsBeforeRefresh = schedulerService.getJobsSize();
     schedulerService.refreshCron(note.getId());
-    final int jobsAfterRefresh = schedulerService.getJobs().size();
+    final int jobsAfterRefresh = schedulerService.getJobsSize();
 
     assertEquals(jobsBeforeRefresh, jobsAfterRefresh);
 
