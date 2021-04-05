@@ -64,24 +64,14 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-mockito</artifactId>
-      <version>${powermock.version}</version>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
-      <version>${powermock.version}</version>
     </dependency>
   </dependencies>
 
   <build>
-    <testResources>
-      <testResource>
-        <directory>${project.basedir}/src/test/resources</directory>
-      </testResource>
-      <testResource>
-        <directory>${project.basedir}/src/main/resources</directory>
-      </testResource>
-    </testResources>
     <plugins>
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -93,23 +83,13 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <configuration>
-          <skip>false</skip>
-        </configuration>
+        <artifactId>maven-dependency-plugin</artifactId>
       </plugin>
     </plugins>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/*.*</include>
-        </includes>
-      </resource>
-    </resources>
   </build>
 </project>

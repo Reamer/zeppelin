@@ -90,23 +90,41 @@
     <build>
         <pluginManagement>
             <plugins>
+                <!-- Shade the whole plugin -->
                 <plugin>
-                    <artifactId>maven-dependency-plugin</artifactId>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
                     <executions>
                         <execution>
-                            <id>copy-plugin-dependencies</id>
+                            <id>zeppelin-plugin-shade</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>copy-dependencies</goal>
+                                <goal>shade</goal>
                             </goals>
-                            <configuration>
-                                <outputDirectory>${project.basedir}/../../../plugins/${plugin.name}</outputDirectory>
-                                <overWriteReleases>false</overWriteReleases>
-                                <overWriteSnapshots>false</overWriteSnapshots>
-                                <overWriteIfNewer>true</overWriteIfNewer>
-                                <includeScope>runtime</includeScope>
-                            </configuration>
                         </execution>
+                    </executions>
+                    <configuration>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                        </transformers>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <executions>
                         <execution>
                             <id>copy-plugin-artifact</id>
                             <phase>package</phase>
