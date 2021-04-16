@@ -118,7 +118,7 @@
       <extension>
         <groupId>kr.motd.maven</groupId>
         <artifactId>os-maven-plugin</artifactId>
-        <version>1.4.1.Final</version>
+        <version>1.7.0</version>
       </extension>
     </extensions>
 
@@ -137,18 +137,6 @@
             <goals>
               <goal>compile</goal>
               <goal>compile-custom</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>run</goal>
             </goals>
           </execution>
         </executions>

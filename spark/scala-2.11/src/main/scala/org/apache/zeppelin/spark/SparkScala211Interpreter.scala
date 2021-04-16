@@ -68,12 +68,12 @@ class SparkScala211Interpreter(override val conf: SparkConf,
 
     val settings = new Settings()
     settings.processArguments(List("-Yrepl-class-based",
-      "-Yrepl-outdir", s"${outputDir.getAbsolutePath}"), true)
+      "-Yrepl-outdir", s"${outputDir.getAbsolutePath}"), processAll = true)
     settings.embeddedDefaults(sparkInterpreterClassLoader)
     settings.usejavacp.value = true
     settings.target.value = target
 
-    this.userJars = getUserJars()
+    this.userJars = getUserJars
     LOGGER.info("UserJars: " + userJars.mkString(File.pathSeparator))
     settings.classpath.value = userJars.mkString(File.pathSeparator)
 

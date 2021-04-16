@@ -78,12 +78,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration combine.self="override"></configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <executions>
@@ -193,6 +187,5 @@
                 <py4j.version>0.10.7</py4j.version>
             </properties>
         </profile>
-
     </profiles>
 </project>

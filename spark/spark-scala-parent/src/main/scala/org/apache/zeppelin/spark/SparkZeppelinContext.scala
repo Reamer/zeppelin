@@ -17,17 +17,15 @@
 
 package org.apache.zeppelin.spark
 
-import java.util
-
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.DataFrame
 import org.apache.zeppelin.annotation.ZeppelinApi
 import org.apache.zeppelin.display.AngularObjectWatcher
 import org.apache.zeppelin.display.ui.OptionInput.ParamOption
-import org.apache.zeppelin.interpreter.{ZeppelinContext, InterpreterContext, InterpreterHookRegistry}
+import org.apache.zeppelin.interpreter.{InterpreterContext, InterpreterHookRegistry, ZeppelinContext}
 
-import scala.collection.Seq
+import java.util
 import scala.collection.JavaConverters._
+import scala.collection.Seq
 
 
 /**

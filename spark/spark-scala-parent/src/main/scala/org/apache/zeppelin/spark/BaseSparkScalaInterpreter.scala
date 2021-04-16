@@ -18,23 +18,22 @@
 package org.apache.zeppelin.spark
 
 
-import java.io.{File, IOException}
-import java.net.{URL, URLClassLoader}
-import java.nio.file.Paths
-import java.util.concurrent.atomic.AtomicInteger
-
 import org.apache.commons.lang3.StringUtils
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.yarn.client.api.YarnClient
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.hadoop.yarn.util.ConverterUtils
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.zeppelin.interpreter.util.InterpreterOutputStream
 import org.apache.zeppelin.interpreter.{InterpreterContext, InterpreterGroup, InterpreterResult, ZeppelinContext}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.{File, IOException}
+import java.net.URLClassLoader
+import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.JavaConverters._
 import scala.tools.nsc.interpreter.Completion
 import scala.util.control.NonFatal
@@ -43,10 +42,10 @@ import scala.util.control.NonFatal
   * Base class for different scala versions of SparkInterpreter. It should be
   * binary compatible between multiple scala versions.
   *
-  * @param conf
-  * @param depFiles
-  * @param properties
-  * @param interpreterGroup
+  * @param conf SparkConf
+  * @param depFiles dependency files
+  * @param properties Properties of Spark
+  * @param interpreterGroup Zeppelin InterpreterGroup
   */
 abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
                                          val depFiles: java.util.List[String],
@@ -191,7 +190,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
       val appStagingBaseDir = if (conf.contains("spark.yarn.stagingDir")) {
         new Path(conf.get("spark.yarn.stagingDir"))
       } else {
-        FileSystem.get(hadoopConf).getHomeDirectory()
+        FileSystem.get(hadoopConf).getHomeDirectory
       }
       val stagingDirPath = new Path(appStagingBaseDir, ".sparkStaging" + "/" + sc.applicationId)
       cleanupStagingDirInternal(stagingDirPath, hadoopConf)
@@ -244,7 +243,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
       if (hiveSiteExisted && hiveClassesPresent) {
         builder.getClass.getMethod("enableHiveSupport").invoke(builder)
         sparkSession = builder.getClass.getMethod("getOrCreate").invoke(builder)
-        LOGGER.info("Created Spark session (with Hive support)");
+        LOGGER.info("Created Spark session (with Hive support)")
       } else {
         if (!hiveClassesPresent) {
           LOGGER.warn("Hive support can not be enabled because spark is not built with hive")
@@ -253,16 +252,16 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
           LOGGER.warn("Hive support can not be enabled because no hive-site.xml found")
         }
         sparkSession = builder.getClass.getMethod("getOrCreate").invoke(builder)
-        LOGGER.info("Created Spark session (without Hive support)");
+        LOGGER.info("Created Spark session (without Hive support)")
       }
     } else {
       sparkSession = builder.getClass.getMethod("getOrCreate").invoke(builder)
-      LOGGER.info("Created Spark session (without Hive support)");
+      LOGGER.info("Created Spark session (without Hive support)")
     }
 
     sc = sparkSession.getClass.getMethod("sparkContext").invoke(sparkSession)
       .asInstanceOf[SparkContext]
-    getUserFiles().foreach(file => sc.addFile(file))
+    getUserFiles.foreach(file => sc.addFile(file))
     sqlContext = sparkSession.getClass.getMethod("sqlContext").invoke(sparkSession)
       .asInstanceOf[SQLContext]
     sc.getClass.getMethod("uiWebUrl").invoke(sc).asInstanceOf[Option[String]] match {
@@ -286,9 +285,9 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
   }
 
   private def initAndSendSparkWebUrl(): Unit = {
-    val webUiUrl = properties.getProperty("zeppelin.spark.uiWebUrl");
+    val webUiUrl = properties.getProperty("zeppelin.spark.uiWebUrl")
     if (!StringUtils.isBlank(webUiUrl)) {
-      this.sparkUrl = webUiUrl.replace("{{applicationId}}", sc.applicationId);
+      this.sparkUrl = webUiUrl.replace("{{applicationId}}", sc.applicationId)
     } else {
       useYarnProxyURLIfNeeded()
     }
@@ -298,7 +297,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
   protected def createZeppelinContext(): Unit = {
 
     var sparkShims: SparkShims = null
-    if (isSparkSessionPresent()) {
+    if (isSparkSessionPresent) {
       sparkShims = SparkShims.getInstance(sc.version, properties, sparkSession)
     } else {
       sparkShims = SparkShims.getInstance(sc.version, properties, sc)
@@ -330,7 +329,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
     }
   }
 
-  private def isSparkSessionPresent(): Boolean = {
+  private def isSparkSessionPresent: Boolean = {
     try {
       Class.forName("org.apache.spark.sql.SparkSession")
       true
@@ -388,7 +387,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
       // Create Http Server
       val port = conf.getInt("spark.replClassServer.port", 0)
       val server = httpServerConstructor
-        .newInstance(conf, outputDir, securityManager, new Integer(port), "HTTP server")
+        .newInstance(conf, outputDir, securityManager, Integer.valueOf(port), "HTTP server")
         .asInstanceOf[Object]
 
       // Start Http Server
@@ -408,13 +407,13 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
     }
   }
 
-  protected def getUserJars(): Seq[String] = {
+  protected def getUserJars: Seq[String] = {
     var classLoader = Thread.currentThread().getContextClassLoader
     var extraJars = Seq.empty[String]
     while (classLoader != null) {
       if (classLoader.getClass.getCanonicalName ==
         "org.apache.spark.util.MutableURLClassLoader") {
-        extraJars = classLoader.asInstanceOf[URLClassLoader].getURLs()
+        extraJars = classLoader.asInstanceOf[URLClassLoader].getURLs
           // Check if the file exists.
           .filter { u => u.getProtocol == "file" && new File(u.getPath).isFile }
           // Some bad spark packages depend on the wrong version of scala-reflect. Blacklist it.
@@ -428,12 +427,12 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
       }
     }
 
-    extraJars ++= sparkInterpreterClassLoader.getURLs().map(_.getPath())
+    extraJars ++= sparkInterpreterClassLoader.getURLs.map(_.getPath())
     LOGGER.debug("User jar for spark repl: " + extraJars.mkString(","))
     extraJars
   }
 
-  protected def getUserFiles(): Seq[String] = {
+  protected def getUserFiles: Seq[String] = {
     depFiles.asScala.filter(!_.endsWith(".jar"))
   }
 }
