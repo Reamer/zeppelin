@@ -111,8 +111,8 @@ public class Spark3Shims extends SparkShims {
     }
   }
 
-  private List sparkRowToList(Row row) {
-    List list = new ArrayList();
+  private List<Object> sparkRowToList(Row row) {
+    List<Object> list = new ArrayList<>();
     for (int i = 0; i< row.size(); i++) {
       list.add(row.get(i));
     }

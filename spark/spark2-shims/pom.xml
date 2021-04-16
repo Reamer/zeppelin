@@ -26,16 +26,32 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.zeppelin</groupId>
   <artifactId>spark2-shims</artifactId>
-  <version>0.10.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Zeppelin: Spark2 Shims</name>
 
   <properties>
     <scala.binary.version>2.11</scala.binary.version>
-    <spark.version>2.3.2</spark.version>
+    <spark.version>2.4.7</spark.version>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>spark-2.4-scala-2.11</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <scala.binary.version>2.11</scala.binary.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>spark-2.4-scala-2.12</id>
+      <properties>
+        <scala.binary.version>2.12</scala.binary.version>
+      </properties>
+    </profile>
+  </profiles>
 
   <dependencies>
 

@@ -27,10 +27,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>org.apache.zeppelin</groupId>
   <artifactId>spark-interpreter</artifactId>
   <packaging>jar</packaging>
-  <version>0.10.0-SNAPSHOT</version>
   <name>Zeppelin: Spark Interpreter</name>
   <description>Zeppelin spark support</description>
 
@@ -46,7 +44,7 @@
     <datanucleus.apijdo.version>3.2.6</datanucleus.apijdo.version>
     <datanucleus.core.version>3.2.10</datanucleus.core.version>
 
-    <scala.compile.version>${spark.scala.version}</scala.compile.version>
+
     <!-- settings -->
     <pyspark.test.exclude>**/PySparkInterpreterMatplotlibTest.java</pyspark.test.exclude>
     <pyspark.test.include>**/*Test.*</pyspark.test.include>
@@ -84,12 +82,6 @@
       <artifactId>zeppelin-interpreter</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
-      <artifactId>spark1-shims</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -211,7 +203,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>2.6.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -225,7 +216,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-exec</artifactId>
-      <version>${commons.exec.version}</version>
     </dependency>
 
     <dependency>
@@ -351,7 +341,7 @@
         <configuration>
           <rules>
             <requireJavaVersion>
-              <version>1.7</version>
+              <version>1.8</version>
             </requireJavaVersion>
           </rules>
         </configuration>
@@ -361,24 +351,9 @@
         <groupId>com.googlecode.maven-download-plugin</groupId>
         <artifactId>download-maven-plugin</artifactId>
         <executions>
-          <!-- include pyspark by default -->
+          <!-- include sparkr and pyspark by default -->
           <execution>
-            <id>download-pyspark-files</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>wget</goal>
-            </goals>
-            <configuration>
-              <readTimeOut>60000</readTimeOut>
-              <retries>5</retries>
-              <unpack>true</unpack>
-              <url>${spark.src.download.url}</url>
-              <outputDirectory>${project.build.directory}</outputDirectory>
-            </configuration>
-          </execution>
-          <!-- include sparkr by default -->
-          <execution>
-            <id>download-sparkr-files</id>
+            <id>download-sparkr-and-pyspark-files</id>
             <phase>validate</phase>
             <goals>
               <goal>wget</goal>
@@ -393,31 +368,26 @@
           </execution>
         </executions>
       </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>zip-pyspark-files</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <delete dir="../../interpreter/spark/pyspark" />
-                <copy file="${project.build.directory}/${spark.archive}/python/lib/py4j-${py4j.version}-src.zip" todir="${project.build.directory}/../../../interpreter/spark/pyspark" />
-                <zip basedir="${project.build.directory}/${spark.archive}/python" destfile="${project.build.directory}/../../../interpreter/spark/pyspark/pyspark.zip" includes="pyspark/*.py,pyspark/**/*.py" />
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
+          <execution>
+            <id>copy-python-files</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/../../../interpreter/spark/pyspark</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>
+                    ${project.build.directory}/spark-${spark.version}-bin-without-hadoop/python/lib
+                  </directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
           <execution>
             <id>copy-sparkr-files</id>
             <phase>generate-resources</phase>

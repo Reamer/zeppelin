@@ -106,13 +106,8 @@ Set spark major version
 Available profiles are
 
 ```
--Pspark-3.0
+-Pspark-3.1
 -Pspark-2.4
--Pspark-2.3
--Pspark-2.2
--Pspark-2.1
--Pspark-2.0
--Pspark-1.6
 ```
 
 minor version can be adjusted by `-Dspark.version=x.x.x`
@@ -120,17 +115,16 @@ minor version can be adjusted by `-Dspark.version=x.x.x`
 ##### `-Pspark-scala-[version] (optional)`
 
 To be noticed, these profiles also only affect the embedded mode (no need to specify `SPARK_HOME`) of Spark interpreter. 
-Actually Zeppelin supports all the versions of scala (2.10, 2.11, 2.12) in Spark interpreter as long as you specify `SPARK_HOME`.
+Actually Zeppelin supports all the versions of scala (2.11, 2.12) in Spark interpreter as long as you specify `SPARK_HOME`.
 
 Available profiles are
 
 ```
--Pspark-scala-2.10
 -Pspark-scala-2.11
 -Pspark-scala-2.12
 ```
 
-If you want to use Spark 3.x in the embedded mode, then you have to specify both profile `spark-3.0` and `spark-scala-2.12`,
+If you want to use Spark 3.x in the embedded mode, then you have to specify both profile `spark-3.1` and `spark-scala-2.12`,
 because Spark 3.x doesn't support scala 2.10 and 2.11.
  
 #### Build hadoop with Zeppelin (`-Phadoop[version]`)
@@ -163,17 +157,14 @@ Build examples under zeppelin-examples directory
 Here are some examples with several options:
 
 ```bash
-# build with spark-3.0, spark-scala-2.12
-mvn clean package -Pspark-3.0 -Pspark-scala-2.12 -DskipTests
+# build with spark-3.1, spark-scala-2.12
+mvn clean package -Pspark-3.1 -Pspark-scala-2.12 -DskipTests
 
 # build with spark-2.4, spark-scala-2.11
 mvn clean package -Pspark-2.4 -Pspark-scala-2.11 -DskipTests
 
-# build with spark-1.6, spark-scala-2.10
-mvn clean package -Pspark-1.6 -Pspark-scala-2.10 -DskipTests
-
 # build with CDH
-mvn clean package -Pspark-1.6 -Pspark-scala-2.10 -Dhadoop.version=2.6.0-cdh5.5.0 -Pvendor-repo -DskipTests
+mvn clean package -Pspark-3.1 -Pspark-scala-2.12 -Dhadoop.version=2.6.0-cdh5.5.0 -Pvendor-repo -DskipTests
 ```
 
 Ignite Interpreter
