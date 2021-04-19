@@ -253,7 +253,7 @@ public class SparkInterpreterTest {
 
     // ZeppelinContext
     result = interpreter.interpret("z.show(df)", getInterpreterContext());
-    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+    assertEquals("Result: " + result, InterpreterResult.Code.SUCCESS, result.code());
     assertEquals(InterpreterResult.Type.TABLE, messageOutput.getType());
     messageOutput.flush();
     assertEquals("_1\t_2\n1\ta\n2\tnull\n", messageOutput.toInterpreterResultMessage().getData());
