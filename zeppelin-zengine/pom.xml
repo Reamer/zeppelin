@@ -54,7 +54,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>zeppelin-interpreter</artifactId>
+      <artifactId>zeppelin-interpreter-shaded</artifactId>
       <version>${project.version}</version>
     </dependency>
 
