@@ -16,10 +16,9 @@
  */
 package org.apache.zeppelin.socket;
 
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import shaded.com.google.gson.Gson;
+import shaded.com.google.gson.GsonBuilder;
+import shaded.com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
@@ -41,7 +40,7 @@ import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.thrift.TException;
+import shaded.org.apache.thrift.TException;
 import org.apache.zeppelin.cluster.ClusterManagerServer;
 import org.apache.zeppelin.cluster.event.ClusterEvent;
 import org.apache.zeppelin.cluster.event.ClusterEventListener;
@@ -1589,8 +1588,8 @@ public class NotebookServer extends WebSocketServlet
 
             // if it's the last paragraph and not empty, let's add a new one
             boolean isTheLastParagraph = p.getNote().isLastParagraph(paragraphId);
-            if (!(Strings.isNullOrEmpty(p.getText()) ||
-                Strings.isNullOrEmpty(p.getScriptText())) &&
+            if (!(StringUtils.isEmpty(p.getText()) ||
+                StringUtils.isEmpty(p.getScriptText())) &&
                 isTheLastParagraph) {
               Paragraph newPara = p.getNote().addNewParagraph(p.getAuthenticationInfo());
               broadcastNewParagraph(p.getNote(), newPara);

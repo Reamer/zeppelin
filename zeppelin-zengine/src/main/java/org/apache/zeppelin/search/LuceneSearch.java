@@ -16,12 +16,11 @@
  */
 package org.apache.zeppelin.search;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import shaded.com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -141,7 +140,7 @@ public class LuceneSearch extends SearchService {
 
   private List<Map<String, String>> doSearch(
       IndexSearcher searcher, Query query, Analyzer analyzer, Highlighter highlighter) {
-    List<Map<String, String>> matchingParagraphs = Lists.newArrayList();
+    List<Map<String, String>> matchingParagraphs = new ArrayList<>();
     ScoreDoc[] hits;
     try {
       hits = searcher.search(query, 20).scoreDocs;
@@ -251,7 +250,7 @@ public class LuceneSearch extends SearchService {
   static String formatId(String noteId, Paragraph p) {
     String id = noteId;
     if (null != p) {
-      id = Joiner.on('/').join(id, PARAGRAPH, p.getId());
+      id = String.join("/", id, PARAGRAPH, p.getId());
     }
     return id;
   }
@@ -259,7 +258,7 @@ public class LuceneSearch extends SearchService {
   static String formatDeleteId(String noteId, Paragraph p) {
     String id = noteId;
     if (null != p) {
-      id = Joiner.on('/').join(id, PARAGRAPH, p.getId());
+      id = String.join("/", id, PARAGRAPH, p.getId());
     } else {
       id = id + "*";
     }

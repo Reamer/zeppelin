@@ -19,7 +19,6 @@
 package org.apache.zeppelin.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -30,19 +29,18 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.Interpreter;
@@ -75,7 +73,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 public class NotebookServiceTest {
 
@@ -93,7 +90,7 @@ public class NotebookServiceTest {
 
   @Before
   public void setUp() throws Exception {
-    notebookDir = Files.createTempDir().getAbsoluteFile();
+    notebookDir = Files.createTempDirectory("NotebookServiceTest").toFile();
     System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_DIR.getVarName(),
             notebookDir.getAbsolutePath());
     ZeppelinConfiguration zeppelinConfiguration = ZeppelinConfiguration.create();

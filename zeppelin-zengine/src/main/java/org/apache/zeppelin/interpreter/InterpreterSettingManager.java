@@ -17,11 +17,10 @@
 
 package org.apache.zeppelin.interpreter;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import shaded.com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.base.Preconditions;
+import shaded.com.google.common.collect.ImmutableMap;
+import shaded.com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -31,6 +30,7 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tags;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Set;
@@ -73,9 +73,9 @@ import org.eclipse.jetty.util.annotation.ManagedAttribute;
 import org.eclipse.jetty.util.annotation.ManagedObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.eclipse.aether.repository.Proxy;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.repository.Authentication;
+import shaded.org.eclipse.aether.repository.Proxy;
+import shaded.org.eclipse.aether.repository.RemoteRepository;
+import shaded.org.eclipse.aether.repository.Authentication;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -205,12 +205,12 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
   }
 
   public void refreshInterpreterTemplates() {
-    Set<String> installedInterpreters = Sets.newHashSet(interpreterSettingTemplates.keySet());
+    Set<String> installedInterpreters = new HashSet<>(interpreterSettingTemplates.keySet());
 
     try {
       LOGGER.info("Refreshing interpreter list");
       loadInterpreterSettingFromDefaultDir(false);
-      Set<String> newlyAddedInterpreters = Sets.newHashSet(interpreterSettingTemplates.keySet());
+      Set<String> newlyAddedInterpreters = new HashSet<>(interpreterSettingTemplates.keySet());
       newlyAddedInterpreters.removeAll(installedInterpreters);
       if(!newlyAddedInterpreters.isEmpty()) {
         saveToFile();
@@ -1104,7 +1104,7 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
 
   @ManagedAttribute
   public Set<String> getRunningInterpreters() {
-    Set<String> runningInterpreters = Sets.newHashSet();
+    Set<String> runningInterpreters = new HashSet<>();
     for (Map.Entry<String, InterpreterSetting> entry : interpreterSettings.entrySet()) {
       for (ManagedInterpreterGroup mig : entry.getValue().getAllInterpreterGroups()) {
         if (null != mig.getRemoteInterpreterProcess()) {

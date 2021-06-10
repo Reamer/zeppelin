@@ -16,8 +16,7 @@
  */
 package org.apache.zeppelin.server;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +27,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.io.CharStreams;
+import shaded.com.google.common.io.CharStreams;
 
 public class HtmlAddonResourceTest {
 
@@ -46,9 +45,8 @@ public class HtmlAddonResourceTest {
         try (final Reader reader = new InputStreamReader(addonResource.getInputStream())) {
             content = CharStreams.toString(reader);
         }
-
-        assertThat(content, containsString(TEST_BODY_ADDON));
-        assertThat(content, containsString(TEST_HEAD_ADDON));
+        assertTrue(content.contains(TEST_BODY_ADDON));
+        assertTrue(content.contains(TEST_HEAD_ADDON));
 
     }
 
@@ -61,10 +59,8 @@ public class HtmlAddonResourceTest {
         try (final Reader reader = new InputStreamReader(addonResource.getInputStream())) {
             content = CharStreams.toString(reader);
         }
-
-        assertThat(content, containsString(TEST_BODY_ADDON));
-        assertThat(content, containsString(TEST_HEAD_ADDON));
-
+        assertTrue(content.contains(TEST_BODY_ADDON));
+        assertTrue(content.contains(TEST_HEAD_ADDON));
     }
 
     private Resource getHtmlAddonResource(final String indexHtmlPath) {

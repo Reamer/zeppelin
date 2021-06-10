@@ -17,7 +17,6 @@
 
 package org.apache.zeppelin.rest;
 
-import com.google.common.collect.Maps;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -42,7 +41,7 @@ import org.apache.zeppelin.service.SimpleServiceCallback;
 import org.apache.zeppelin.socket.NotebookServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.eclipse.aether.repository.RemoteRepository;
+import shaded.org.eclipse.aether.repository.RemoteRepository;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
@@ -55,6 +54,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -316,7 +316,7 @@ public class InterpreterRestApi {
             @Override
             public void onStart(String message, ServiceContext context) {
               Message m = new Message(OP.INTERPRETER_INSTALL_STARTED);
-              Map<String, Object> data = Maps.newHashMap();
+              Map<String, Object> data = new HashMap<>();
               data.put("result", "Starting");
               data.put("message", message);
               m.data = data;
@@ -326,7 +326,7 @@ public class InterpreterRestApi {
             @Override
             public void onSuccess(String message, ServiceContext context) {
               Message m = new Message(OP.INTERPRETER_INSTALL_RESULT);
-              Map<String, Object> data = Maps.newHashMap();
+              Map<String, Object> data = new HashMap<>();
               data.put("result", "Succeed");
               data.put("message", message);
               m.data = data;
@@ -336,7 +336,7 @@ public class InterpreterRestApi {
             @Override
             public void onFailure(Exception ex, ServiceContext context) {
               Message m = new Message(OP.INTERPRETER_INSTALL_RESULT);
-              Map<String, Object> data = Maps.newHashMap();
+              Map<String, Object> data = new HashMap<>();
               data.put("result", "Failed");
               data.put("message", ex.getMessage());
               m.data = data;

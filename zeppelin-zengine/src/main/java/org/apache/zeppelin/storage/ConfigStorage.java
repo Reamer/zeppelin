@@ -18,7 +18,7 @@
 
 package org.apache.zeppelin.storage;
 
-import com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;

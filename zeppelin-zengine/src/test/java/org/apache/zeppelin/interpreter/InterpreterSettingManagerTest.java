@@ -27,8 +27,8 @@ import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.junit.Before;
 import org.junit.Test;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.repository.RemoteRepository;
+import shaded.org.eclipse.aether.RepositoryException;
+import shaded.org.eclipse.aether.repository.RemoteRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;

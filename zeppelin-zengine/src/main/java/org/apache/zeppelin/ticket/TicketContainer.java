@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.Sets;
+import shaded.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class TicketContainer {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TicketContainer.class);
 
-  public static final Entry ANONYMOUS_ENTRY = new Entry("anonymous", "anonymous", Sets.newHashSet());
+  public static final Entry ANONYMOUS_ENTRY = new Entry("anonymous", "anonymous", new HashSet<>());
 
   public static class Entry {
     private final String ticket;
