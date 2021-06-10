@@ -46,11 +46,31 @@
   </dependencies>
 
   <build>
+    <!-- This is a hack for intellij, because this IDE is not able to use the shaded jar as dependency
+         See: https://youtrack.jetbrains.com/issue/IDEA-93855 -->
+    <sourceDirectory>${project.build.directory}/shaded-sources</sourceDirectory>
     <plugins>
+      <!-- This shade module has no own source code -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>none</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <configuration>
+          <createSourcesJar>true</createSourcesJar>
+          <shadeSourcesContent>true</shadeSourcesContent>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
           <artifactSet>
             <excludes>
               <!-- Leave slf4j unshaded so downstream users can configure logging. -->
@@ -165,6 +185,43 @@
         </executions>
       </plugin>
 
+      <!-- This is a hack for intellij, because this IDE is not able to use the shaded jar as dependency
+           See: https://youtrack.jetbrains.com/issue/IDEA-93855 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.zeppelin</groupId>
+                  <artifactId>zeppelin-interpreter-shaded</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                  <includes>**/**</includes>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.zeppelin</groupId>
+                  <artifactId>zeppelin-interpreter-shaded</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <classifier>sources</classifier>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/shaded-sources</outputDirectory>
+                  <includes>**/**</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
