@@ -17,14 +17,13 @@
 
 package org.apache.zeppelin.notebook.repo;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +52,7 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class NotebookRepoSyncTest {
 
   private File ZEPPELIN_HOME;
@@ -73,7 +73,7 @@ public class NotebookRepoSyncTest {
   @Before
   public void setUp() throws Exception {
     System.setProperty("zeppelin.isTest", "true");
-    ZEPPELIN_HOME = Files.createTempDir();
+    ZEPPELIN_HOME = Files.createTempDirectory("NotebookRepoSyncTest").toFile();
     new File(ZEPPELIN_HOME, "conf").mkdirs();
     String mainNotePath = ZEPPELIN_HOME.getAbsolutePath() + "/notebook";
     String secNotePath = ZEPPELIN_HOME.getAbsolutePath() + "/notebook_secondary";
@@ -296,16 +296,16 @@ public class NotebookRepoSyncTest {
     Notebook vNotebookSync = new Notebook(vConf, mock(AuthorizationService.class), vRepoSync, new NoteManager(vRepoSync), factory, interpreterSettingManager, search, credentials, null);
 
     // one git versioned storage initialized
-    assertThat(vRepoSync.getRepoCount()).isEqualTo(1);
-    assertThat(vRepoSync.getRepo(0)).isInstanceOf(GitNotebookRepo.class);
+    assertEquals(1, vRepoSync.getRepoCount());
+    assertTrue(vRepoSync.getRepo(0) instanceof GitNotebookRepo);
 
     GitNotebookRepo gitRepo = (GitNotebookRepo) vRepoSync.getRepo(0);
 
     // no notes
-    assertThat(vRepoSync.list(anonymous).size()).isEqualTo(0);
+    assertEquals(0, vRepoSync.list(anonymous).size());
     // create note
     Note note = vNotebookSync.createNote("/test", "test", anonymous);
-    assertThat(vRepoSync.list(anonymous).size()).isEqualTo(1);
+    assertEquals(1, vRepoSync.list(anonymous).size());
 
     NoteInfo noteInfo = vRepoSync.list(anonymous).values().iterator().next();
     String noteId = noteInfo.getId();
@@ -313,7 +313,7 @@ public class NotebookRepoSyncTest {
     // first checkpoint
     vRepoSync.checkpoint(noteId, notePath, "checkpoint message", anonymous);
     int vCount = gitRepo.revisionHistory(noteId, notePath, anonymous).size();
-    assertThat(vCount).isEqualTo(1);
+    assertEquals(1, vCount);
 
     note.setInterpreterFactory(mock(InterpreterFactory.class));
     Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -325,7 +325,7 @@ public class NotebookRepoSyncTest {
     // save and checkpoint again
     vRepoSync.save(note, anonymous);
     vRepoSync.checkpoint(noteId, notePath, "checkpoint message 2", anonymous);
-    assertThat(gitRepo.revisionHistory(noteId, notePath, anonymous).size()).isEqualTo(vCount + 1);
+    assertEquals(vCount + 1, gitRepo.revisionHistory(noteId, notePath, anonymous).size());
     notebookRepoSync.remove(note.getId(), note.getPath(), anonymous);
   }
 

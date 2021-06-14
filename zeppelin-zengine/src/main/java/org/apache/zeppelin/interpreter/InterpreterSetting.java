@@ -17,9 +17,9 @@
 
 package org.apache.zeppelin.interpreter;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import shaded.com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.base.Preconditions;
+import shaded.com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;

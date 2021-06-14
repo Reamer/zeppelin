@@ -1,6 +1,6 @@
 package org.apache.zeppelin.notebook;
 
-import com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -17,8 +17,8 @@
 
 package org.apache.zeppelin.plugin;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import shaded.com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.collect.Lists;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.launcher.InterpreterLauncher;
 import org.apache.zeppelin.interpreter.launcher.SparkInterpreterLauncher;

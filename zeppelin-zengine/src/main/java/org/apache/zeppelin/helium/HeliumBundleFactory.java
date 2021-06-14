@@ -25,7 +25,7 @@ import com.github.eirslett.maven.plugins.frontend.lib.ProxyConfig;
 import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
 import com.github.eirslett.maven.plugins.frontend.lib.YarnInstaller;
 import com.github.eirslett.maven.plugins.frontend.lib.YarnRunner;
-import com.google.common.io.Resources;
+import shaded.com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;

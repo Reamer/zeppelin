@@ -19,7 +19,6 @@ package org.apache.zeppelin.notebook.repo;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -122,7 +121,9 @@ public class MongoNotebookRepo implements NotebookRepo {
             .append("as", Fields.FULL_PATH));
 
     try (AutoLock autoLock = lock.lockForRead()) {
-      ArrayList<Document> list = Lists.newArrayList(match, graphLookup);
+      ArrayList<Document> list = new ArrayList<>();
+      list.add(match);
+      list.add(graphLookup);
       AggregateIterable<Document> aggregate = folders.aggregate(list);
       for (Document document : aggregate) {
         String id = document.getString(Fields.ID);

@@ -17,7 +17,7 @@
 
 package org.apache.zeppelin.notebook;
 
-import com.google.common.collect.Sets;
+import shaded.com.google.common.collect.Sets;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObjectRegistry;
@@ -47,7 +47,7 @@ import org.junit.Test;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.eclipse.aether.RepositoryException;
+import shaded.org.eclipse.aether.RepositoryException;
 
 import java.io.File;
 import java.io.IOException;

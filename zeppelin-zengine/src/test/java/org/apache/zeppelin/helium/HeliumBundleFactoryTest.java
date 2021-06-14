@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.github.eirslett.maven.plugins.frontend.lib.InstallationException;
 import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
-import com.google.common.io.Resources;
+import shaded.com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;

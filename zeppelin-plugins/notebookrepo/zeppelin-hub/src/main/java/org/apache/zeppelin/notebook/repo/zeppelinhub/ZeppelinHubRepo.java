@@ -16,11 +16,14 @@
  */
 package org.apache.zeppelin.notebook.repo.zeppelinhub;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,9 +43,7 @@ import org.apache.zeppelin.user.AuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import shaded.com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -257,7 +258,7 @@ public class ZeppelinHubRepo implements NotebookRepoWithVersionControl {
     if (StringUtils.isBlank(noteId) || !isSubjectValid(subject)) {
       return Revision.EMPTY;
     }
-    String endpoint = Joiner.on("/").join(noteId, "checkpoint");
+    String endpoint = String.join(File.separator, noteId, "checkpoint");
     String content = GSON.toJson(ImmutableMap.of("message", checkpointMsg));
 
     String token = getUserToken(subject.getUser());
@@ -271,7 +272,7 @@ public class ZeppelinHubRepo implements NotebookRepoWithVersionControl {
     if (StringUtils.isBlank(noteId) || StringUtils.isBlank(revId) || !isSubjectValid(subject)) {
       return EMPTY_NOTE;
     }
-    String endpoint = Joiner.on("/").join(noteId, "checkpoint", revId);
+    String endpoint = String.join(File.separator, noteId, "checkpoint", revId);
     String token = getUserToken(subject.getUser());
     String response = restApiClient.get(token, endpoint);
 
@@ -288,7 +289,7 @@ public class ZeppelinHubRepo implements NotebookRepoWithVersionControl {
     if (StringUtils.isBlank(noteId) || !isSubjectValid(subject)) {
       return Collections.emptyList();
     }
-    String endpoint = Joiner.on("/").join(noteId, "checkpoint");
+    String endpoint = String.join(File.separator, noteId, "checkpoint");
     List<Revision> history = Collections.emptyList();
     try {
       String token = getUserToken(subject.getUser());
@@ -310,12 +311,12 @@ public class ZeppelinHubRepo implements NotebookRepoWithVersionControl {
       return Collections.emptyList();
     }
 
-    List<NotebookRepoSettingsInfo> settings = Lists.newArrayList();
+    List<NotebookRepoSettingsInfo> settings = new ArrayList<>();
     String user = subject.getUser();
     String zeppelinHubUserSession = UserSessionContainer.instance.getSession(user);
     String userToken = getUserToken(user);
     List<Instance> instances;
-    List<Map<String, String>> values = Lists.newLinkedList();
+    List<Map<String, String>> values = new LinkedList<>();
 
     try {
       instances = tokenManager.getUserInstances(zeppelinHubUserSession);

@@ -17,7 +17,6 @@
 
 package org.apache.zeppelin.notebook;
 
-import com.google.common.collect.Lists;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.ui.TextBox;
 import org.apache.zeppelin.interpreter.Interpreter;
@@ -197,7 +196,9 @@ public class NoteTest {
     p.setResult(new InterpreterResult(InterpreterResult.Code.SUCCESS, "1.6.2"));
     p.settings.getForms().put("textbox_1", new TextBox("name", "default_name"));
     p.settings.getParams().put("textbox_1", "my_name");
-    note.getAngularObjects().put("ao_1", Lists.newArrayList(new AngularObject("name_1", "value_1", note.getId(), p.getId(), null)));
+    List<AngularObject> angularObjects = new ArrayList<>();
+    angularObjects.add(new AngularObject("name_1", "value_1", note.getId(), p.getId(), null));
+    note.getAngularObjects().put("ao_1", angularObjects);
 
     // test Paragraph Json
     Paragraph p2 = Paragraph.fromJson(p.toJson());

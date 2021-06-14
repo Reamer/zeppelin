@@ -16,7 +16,7 @@
  */
 package org.apache.zeppelin.helium;
 
-import com.google.common.annotations.VisibleForTesting;
+import shaded.com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
