@@ -209,6 +209,13 @@
       <artifactId>hadoop-client</artifactId>
       <!-- Should always use provided, yarn container (YarnInterpreterLauncher) will provide all the hadoop jars -->
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <!-- guava is provided by atomix-utils -->
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

@@ -233,6 +233,7 @@
       <version>${google.truth.version}</version>
       <scope>test</scope>
       <exclusions>
+        <!-- guava is provided by hadoop-client -->
         <exclusion>
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
