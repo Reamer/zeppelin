@@ -22,11 +22,11 @@ import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.shiro.mgt.DefaultSecurityManager;
-import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.util.LifecycleUtils;
 import org.apache.shiro.util.ThreadContext;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -80,15 +80,12 @@ public class ShiroAuthenticationServiceTest {
 
     KnoxJwtRealm realm = spy(new KnoxJwtRealm());
     LifecycleUtils.init(realm);
-    Set<String> testRoles = new HashSet<String>(){{
-        add("role1");
-        add("role2");
-    }};
+    Set<String> testRoles = new HashSet<String>(Arrays.asList("role1", "role2"));
     when(realm.mapGroupPrincipals("test")).thenReturn(testRoles);
-    
+
     DefaultSecurityManager securityManager = new DefaultSecurityManager(realm);
     ThreadContext.bind(securityManager);
-    
+
     Set<String> roles = shiroSecurityService.getAssociatedRoles();
     assertEquals(testRoles, roles);
   }
