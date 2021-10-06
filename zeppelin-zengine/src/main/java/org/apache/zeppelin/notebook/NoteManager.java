@@ -62,6 +62,8 @@ public class NoteManager {
   // noteId -> notePath
   private Map<String, String> notesInfo;
 
+  private static final NoteCache noteCache = new NoteCache(100);
+
   @Inject
   public NoteManager(NotebookRepo notebookRepo) throws IOException {
     this.notebookRepo = notebookRepo;
@@ -580,6 +582,7 @@ public class NoteManager {
      * @throws IOException
      */
     public synchronized Note getNote(boolean reload) throws IOException {
+      noteCache.put(note.getId(), note);
       if (!note.isLoaded() || reload) {
         note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
         if (parent.toString().equals("/")) {
