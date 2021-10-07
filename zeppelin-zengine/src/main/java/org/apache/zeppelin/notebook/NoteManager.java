@@ -26,11 +26,15 @@ import org.apache.zeppelin.user.AuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tags;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,8 +52,6 @@ import java.util.stream.Stream;
  * Note will be loaded lazily. Initially only noteId nad note name is loaded,
  * other note content is loaded until getNote is called.
  *
- * TODO(zjffdu) implement the lifecycle manager of Note
- * (release memory if note is not used for some period)
  */
 @Singleton
 public class NoteManager {
@@ -59,16 +61,19 @@ public class NoteManager {
   private Folder trash;
 
   private NotebookRepo notebookRepo;
+  private NoteUnloader noteUnloader;
   // noteId -> notePath
   private Map<String, String> notesInfo;
 
   @Inject
-  public NoteManager(NotebookRepo notebookRepo) throws IOException {
+  public NoteManager(NotebookRepo notebookRepo, ZeppelinConfiguration conf) throws IOException {
     this.notebookRepo = notebookRepo;
-    this.root = new Folder("/", notebookRepo);
+    this.noteUnloader = new NoteUnloader(conf.getNoteCacheThreshold());
+    this.root = new Folder("/", notebookRepo, noteUnloader);
     this.trash = this.root.getOrCreateFolder(TRASH_FOLDER);
     init();
   }
+
 
   // build the tree structure of notes
   private void init() throws IOException {
@@ -89,32 +94,23 @@ public class NoteManager {
     return notesInfo;
   }
 
-  /**
-   * Return java stream instead of List to save memory, otherwise OOM will happen
-   * when there's large amount of notes.
-   * @return
-   */
-  public Stream<Note> getNotesStream() {
-    return notesInfo.values().stream()
-            .map(notePath -> {
-              try {
-                return getNoteNode(notePath).getNote();
-              } catch (Exception e) {
-                LOGGER.warn("Fail to load note: {}", notePath, e);
-                return null;
-              }
-            })
-            .filter(Objects::nonNull);
-  }
 
   /**
    *
    * @throws IOException
    */
   public void reloadNotes() throws IOException {
-    this.root = new Folder("/", notebookRepo);
+    this.root = new Folder("/", notebookRepo, noteUnloader);
     this.trash = this.root.getOrCreateFolder(TRASH_FOLDER);
     init();
+  }
+
+  /**
+   *
+   * @return current cache size
+   */
+  public int getCacheSize() {
+    return this.noteUnloader.getSize();
   }
 
   private void addOrUpdateNoteNode(Note note, boolean checkDuplicates) throws IOException {
@@ -134,6 +130,7 @@ public class NoteManager {
 
     curFolder.addNote(tokens[tokens.length -1], note);
     this.notesInfo.put(note.getId(), note.getPath());
+    this.noteUnloader.handleEviction(note);
   }
 
   private void addOrUpdateNoteNode(Note note) throws IOException {
@@ -172,9 +169,7 @@ public class NoteManager {
 
   /**
    * Save note to NoteManager, it won't check duplicates, this is used when updating note.
-   * Only save note in 2 cases:
-   *  1. Note is new created, isSaved is false
-   *  2. Note is in loaded state. Unload state means its content is empty.
+   * Only save note in loaded state. Unload state means its content is empty.
    *
    * @param note
    * @param subject
@@ -183,10 +178,9 @@ public class NoteManager {
   public void saveNote(Note note, AuthenticationInfo subject) throws IOException {
     if (note.isRemoved()) {
       LOGGER.warn("Try to save note: {} when it is removed", note.getId());
-    } else if (note.isLoaded() || !note.isSaved()) {
+    } else if (note.isLoaded()) {
       addOrUpdateNoteNode(note);
       this.notebookRepo.save(note, subject);
-      note.setSaved(true);
     } else {
       LOGGER.warn("Try to save note: {} when it is unloaded", note.getId());
     }
@@ -323,12 +317,7 @@ public class NoteManager {
    * @throws IOException
    */
   public Note getNote(String noteId) throws IOException {
-    String notePath = this.notesInfo.get(noteId);
-    if (notePath == null) {
-      return null;
-    }
-    NoteNode noteNode = getNoteNode(notePath);
-    return noteNode.getNote();
+    return getNote(noteId, false);
   }
 
   /**
@@ -419,19 +408,21 @@ public class NoteManager {
     private String name;
     private Folder parent;
     private NotebookRepo notebookRepo;
+    private NoteUnloader noteUnloader;
 
     // noteName -> NoteNode
     private Map<String, NoteNode> notes = new HashMap<>();
     // folderName -> Folder
     private Map<String, Folder> subFolders = new HashMap<>();
 
-    public Folder(String name, NotebookRepo notebookRepo) {
+    public Folder(String name, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
       this.name = name;
       this.notebookRepo = notebookRepo;
+      this.noteUnloader = noteUnloader;
     }
 
-    public Folder(String name, Folder parent, NotebookRepo notebookRepo) {
-      this(name, notebookRepo);
+    public Folder(String name, Folder parent, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
+      this(name, notebookRepo, noteUnloader);
       this.parent = parent;
     }
 
@@ -440,7 +431,7 @@ public class NoteManager {
         return this;
       }
       if (!subFolders.containsKey(folderName)) {
-        subFolders.put(folderName, new Folder(folderName, this, notebookRepo));
+        subFolders.put(folderName, new Folder(folderName, this, notebookRepo, noteUnloader));
       }
       return subFolders.get(folderName);
     }
@@ -474,7 +465,7 @@ public class NoteManager {
     }
 
     public void addNote(String noteName, Note note) {
-      notes.put(noteName, new NoteNode(note, this, notebookRepo));
+      notes.put(noteName, new NoteNode(note, this, notebookRepo, noteUnloader));
     }
 
     /**
@@ -563,27 +554,32 @@ public class NoteManager {
    * 2. the note object (note content is loaded from NotebookRepo)
    *
    * It will load note from NotebookRepo lazily until method getNote is called.
+   * A NoteUnloader ensures to free up resources when plenty of notes are in loaded state.
    */
   public static class NoteNode {
 
     private Folder parent;
     private Note note;
     private NotebookRepo notebookRepo;
+    private NoteUnloader noteUnloader;
 
-    public NoteNode(Note note, Folder parent, NotebookRepo notebookRepo) {
+    public NoteNode(Note note, Folder parent, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
       this.note = note;
       this.parent = parent;
       this.notebookRepo = notebookRepo;
+      this.noteUnloader = noteUnloader;
     }
 
     public synchronized Note getNote() throws IOException {
-        return getNote(false);
+      return getNote(false);
     }
 
     /**
      * This method will load note from NotebookRepo. If you just want to get noteId, noteName or
      * notePath, you can call method getNoteId, getNoteName & getNotePath
-     * @return
+     *
+     * @param reload force a reload from {@link NotebookRepo}
+     * @return Note
      * @throws IOException
      */
     public synchronized Note getNote(boolean reload) throws IOException {
@@ -597,7 +593,7 @@ public class NoteManager {
         note.setCronSupported(ZeppelinConfiguration.create());
         note.setLoaded(true);
       }
-      return note;
+      return noteUnloader.handleEviction(note);
     }
 
     public String getNoteId() {
@@ -650,6 +646,68 @@ public class NoteManager {
       this.note.setPath(getNotePath());
     }
   }
+
+  /**
+   * Unloads notes when reasonable amount of notes are in loaded state.
+   * Leverage a simple LRU cache for determing evictable notes. Ensure to
+   * not evict notes during save operation (dirty).
+   */
+  private static class NoteUnloader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NoteUnloader.class);
+
+    private final int threshold;
+    private final LRUCache lruCache;
+
+    public NoteUnloader(final int threshold) {
+      // Registering the threshold to compare the configured threshold with the actual note cache
+      this.threshold = Metrics.gauge("zeppelin_note_cache_threshold", Tags.empty(), threshold);
+      this.lruCache = Metrics.gaugeMapSize("zeppelin_note_cache", Tags.empty(), new LRUCache());
+    }
+
+    public int getSize() {
+      return lruCache.size();
+    }
+
+    public synchronized Note handleEviction(final Note note) {
+      if (lruCache.get(note.getId()) == null) { // mark access in LRUCache using get(...) Method.
+        lruCache.put(note.getId(), note);
+      }
+      return note;
+    }
+
+    private class LRUCache extends LinkedHashMap<String, Note> {
+
+      private static final long serialVersionUID = 1L;
+
+      public LRUCache() {
+        super(NoteUnloader.this.threshold, 0.5f, true /* lru by access mode */);
+      }
+
+      @Override
+      protected boolean removeEldestEntry(java.util.Map.Entry<String, Note> eldest) {
+        if (size() <= NoteUnloader.this.threshold) {
+          return false;
+        }
+
+        final Note eldestNote = eldest.getValue();
+        if (eldestNote.getWriteLock().tryLock()) {
+          try {
+            eldestNote.unLoad();
+            return true;
+          } finally {
+            eldestNote.getWriteLock().unlock();
+          }
+        } else {
+          LOGGER.info("Can not evict note {}, because the write lock can not be acquired. {} notes currently loaded.",
+              eldestNote.getId(), size());
+          return false;
+        }
+      }
+    }
+
+  }
+
 
 
 }

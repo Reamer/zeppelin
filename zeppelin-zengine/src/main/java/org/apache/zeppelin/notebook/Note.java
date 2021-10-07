@@ -65,6 +65,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  * Represent the note of Zeppelin. All the note and its paragraph operations are done
@@ -150,7 +153,7 @@ public class Note implements JsonSerializable {
 
   /********************************** transient fields ******************************************/
   private transient boolean loaded = false;
-  private transient boolean saved = false;
+  private transient ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
   private transient boolean removed = false;
   private transient InterpreterFactory interpreterFactory;
   private transient InterpreterSettingManager interpreterSettingManager;
@@ -1226,12 +1229,12 @@ public class Note implements JsonSerializable {
     this.noteEventListeners = noteEventListeners;
   }
 
-  public void setSaved(boolean saved) {
-    this.saved = saved;
+  public ReadLock getReadLock() {
+    return lock.readLock();
   }
 
-  public boolean isSaved() {
-    return saved;
+  public WriteLock getWriteLock() {
+    return lock.writeLock();
   }
 
   public void setRemoved(boolean removed) {

@@ -1,5 +1,6 @@
 package org.apache.zeppelin.notebook;
 
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.exception.NotePathAlreadyExistsException;
 import org.apache.zeppelin.notebook.repo.InMemoryNotebookRepo;
 import org.apache.zeppelin.user.AuthenticationInfo;
@@ -15,13 +16,16 @@ import static org.junit.Assert.assertEquals;
 
 public class NoteManagerTest {
   private NoteManager noteManager;
+  private ZeppelinConfiguration conf;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
+
   @Before
   public void setUp() throws IOException {
-    this.noteManager = new NoteManager(new InMemoryNotebookRepo());
+    conf = ZeppelinConfiguration.create();
+    this.noteManager = new NoteManager(new InMemoryNotebookRepo(), conf);
   }
 
   @Test
@@ -31,6 +35,11 @@ public class NoteManagerTest {
     Note note1 = createNote("/prod/my_note1");
     Note note2 = createNote("/dev/project_2/my_note2");
     Note note3 = createNote("/dev/project_3/my_note3");
+
+    // Fake loaded state
+    note1.setLoaded(true);
+    note2.setLoaded(true);
+    note3.setLoaded(true);
 
     // add note
     this.noteManager.saveNote(note1);
@@ -94,5 +103,41 @@ public class NoteManagerTest {
 
   private Note createNote(String notePath) {
     return new Note(notePath, "test", null, null, null, null, null);
+  }
+
+  @Test
+  public void testLruCache() throws IOException {
+
+    int cacheThreshold = conf.getNoteCacheThreshold();
+
+    // fill cache
+    for (int i = 0; i < cacheThreshold; ++i) {
+      Note note = createNote("/prod/note" + i);
+      noteManager.addNote(note, AuthenticationInfo.ANONYMOUS);
+    }
+    assertEquals(cacheThreshold, noteManager.getCacheSize());
+
+    // add cache + 1
+    Note noteNew = createNote("/prod/notenew");
+    noteManager.addNote(noteNew, AuthenticationInfo.ANONYMOUS);
+    // check for first eviction
+    assertEquals(cacheThreshold, noteManager.getCacheSize());
+
+    // add notes with read flag
+    for (int i = 0; i < cacheThreshold; ++i) {
+      Note note = createNote("/prod/noteDirty" + i);
+      note.getReadLock().lock();
+      noteManager.addNote(note, AuthenticationInfo.ANONYMOUS);
+    }
+    assertEquals(cacheThreshold, noteManager.getCacheSize());
+
+    // add cache + 1
+    Note noteNew2 = createNote("/prod/notenew2");
+    noteManager.addNote(noteNew2, AuthenticationInfo.ANONYMOUS);
+
+    // since all notes in the cache are dirty, the cache grows
+    assertEquals(cacheThreshold + 1, noteManager.getCacheSize());
+
+
   }
 }
