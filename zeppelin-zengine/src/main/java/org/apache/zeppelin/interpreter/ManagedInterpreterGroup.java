@@ -60,6 +60,15 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     return interpreterSetting;
   }
 
+  public boolean isInterpreterProcessCrashed() {
+    if (remoteInterpreterProcess == null) {
+      return false;
+    }
+    synchronized (interpreterProcessCreationLock) {
+      return !remoteInterpreterProcess.isRunning();
+    }
+  }
+
   public RemoteInterpreterProcess getOrCreateInterpreterProcess(String userName,
                                                                 Properties properties)
       throws IOException {
