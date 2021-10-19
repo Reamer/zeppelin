@@ -57,6 +57,13 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     return interpreterSetting;
   }
 
+  public boolean isInterpreterProcessCrashed() {
+    if (remoteInterpreterProcess == null) {
+      return false;
+    }
+    return !remoteInterpreterProcess.isRunning();
+  }
+
   public RemoteInterpreterProcess getOrCreateInterpreterProcess(String userName,
                                                                 Properties properties)
       throws IOException {
@@ -183,6 +190,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     }
   }
 
+  @Override
   public boolean isEmpty() {
     return this.sessions.isEmpty();
   }

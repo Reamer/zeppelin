@@ -455,6 +455,14 @@ public class InterpreterSetting {
             groupId, executionContext);
         ManagedInterpreterGroup intpGroup = createInterpreterGroup(groupId);
         interpreterGroups.put(groupId, intpGroup);
+      } else {
+        // Check for a crashed interpreter process and restart interpreterGroup in this case
+        ManagedInterpreterGroup interpreterGroup = interpreterGroups.get(groupId);
+        if (interpreterGroup.isInterpreterProcessCrashed()) {
+          interpreterGroup.close();
+          interpreterGroups.remove(interpreterGroup.getId());
+          return getOrCreateInterpreterGroup(executionContext);
+        }
       }
       return interpreterGroups.get(groupId);
     } finally {
