@@ -693,29 +693,34 @@ public class HeliumBundleFactory {
   }
 
   private synchronized void configureLogger() {
-    org.apache.log4j.Logger npmLogger = org.apache.log4j.Logger.getLogger(
-        "com.github.eirslett.maven.plugins.frontend.lib.DefaultYarnRunner");
-    Enumeration appenders = org.apache.log4j.Logger.getRootLogger().getAllAppenders();
+    try {
+      Class.forName("org.apache.log4j.Logger");
+      org.apache.log4j.Logger npmLogger = org.apache.log4j.Logger.getLogger(
+              "com.github.eirslett.maven.plugins.frontend.lib.DefaultYarnRunner");
+      Enumeration appenders = org.apache.log4j.Logger.getRootLogger().getAllAppenders();
 
-    if (appenders != null) {
-      while (appenders.hasMoreElements()) {
-        Appender appender = (Appender) appenders.nextElement();
-        appender.addFilter(new Filter() {
+      if (appenders != null) {
+        while (appenders.hasMoreElements()) {
+          Appender appender = (Appender) appenders.nextElement();
+          appender.addFilter(new Filter() {
 
-          @Override
-          public int decide(LoggingEvent loggingEvent) {
-            if (loggingEvent.getLoggerName().contains("DefaultYarnRunner")) {
-              return DENY;
-            } else {
-              return NEUTRAL;
+            @Override
+            public int decide(LoggingEvent loggingEvent) {
+              if (loggingEvent.getLoggerName().contains("DefaultYarnRunner")) {
+                return DENY;
+              } else {
+                return NEUTRAL;
+              }
             }
-          }
-        });
+          });
+        }
       }
+      npmLogger.addAppender(new WriterAppender(
+              new PatternLayout("%m%n"),
+              out
+      ));
+    } catch (ClassNotFoundException e) {
+      LOGGER.warn("log4j is not loaded. Unable to modify Logger");
     }
-    npmLogger.addAppender(new WriterAppender(
-        new PatternLayout("%m%n"),
-        out
-    ));
   }
 }
