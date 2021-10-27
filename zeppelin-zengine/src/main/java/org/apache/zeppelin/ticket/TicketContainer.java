@@ -17,7 +17,6 @@
 
 package org.apache.zeppelin.ticket;
 
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -45,14 +44,10 @@ public class TicketContainer {
     private final String principal;
     private final Set<String> roles;
 
-    // lastAccessTime still unused
-    public final long lastAccessTime;
-
     Entry(String ticket, String principal, Set<String> roles) {
       this.ticket = ticket;
       this.principal = principal;
       this.roles = roles;
-      this.lastAccessTime = Calendar.getInstance().getTimeInMillis();
     }
 
     public String getTicket() {

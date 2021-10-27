@@ -553,14 +553,20 @@ public class ZeppelinServer extends ResourceConfig {
     servletHolder.setName("rest");
     webapp.setSessionHandler(new SessionHandler());
     webapp.addServlet(servletHolder, "/api/*");
+  }
 
+  private static void setupShiroAuthentification(WebAppContext webApp, ZeppelinConfiguration conf) {
     String shiroIniPath = conf.getShiroPath();
     if (!StringUtils.isBlank(shiroIniPath)) {
-      webapp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
-      webapp
+      webApp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
+      webApp
           .addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class))
           .setInitParameter("staticSecurityManagerEnabled", "true");
-      webapp.addEventListener(new EnvironmentLoaderListener());
+      webApp
+          .addFilter(ShiroFilter.class, "/ws", EnumSet.allOf(DispatcherType.class))
+          .setInitParameter("staticSecurityManagerEnabled", "true");
+
+      webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
 
@@ -660,6 +666,9 @@ public class ZeppelinServer extends ResourceConfig {
 
     // Create `ZeppelinServer` using reflection and setup REST Api
     setupRestApiContextHandler(webApp, conf);
+
+    // shiro authentification
+    setupShiroAuthentification(webApp, conf);
 
     // prometheus endpoint
     if (promMetricRegistry != null) {

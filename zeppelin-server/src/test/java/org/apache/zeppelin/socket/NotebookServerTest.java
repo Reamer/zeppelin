@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.Session;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.thrift.TException;
@@ -124,8 +125,8 @@ class NotebookServerTest extends AbstractTestRestApi {
     if (!ZeppelinConfiguration.create().isZeppelinNotebookCollaborativeModeEnable()) {
       return;
     }
-    NotebookSocket sock1 = createWebSocket();
-    NotebookSocket sock2 = createWebSocket();
+    Session sock1 = createWebSocket();
+    Session sock2 = createWebSocket();
 
     String noteName = "Note with millis " + System.currentTimeMillis();
     notebookServer.onMessage(sock1, new Message(OP.NEW_NOTE).put("name", noteName).toJson());
@@ -160,28 +161,28 @@ class NotebookServerTest extends AbstractTestRestApi {
     reset(sock2);
     patchParagraph(sock1, paragraphId, patches[0]);
     assertEquals("ABC", paragraph.getText());
-    verify(sock1, times(sock1SendCount)).send(anyString());
-    verify(sock2, times(++sock2SendCount)).send(anyString());
+    verify(sock1, times(sock1SendCount)).getBasicRemote().sendText(anyString());
+    verify(sock2, times(++sock2SendCount)).getBasicRemote().sendText(anyString());
 
     patchParagraph(sock2, paragraphId, patches[1]);
     assertEquals("ABC\n", paragraph.getText());
-    verify(sock1, times(++sock1SendCount)).send(anyString());
-    verify(sock2, times(sock2SendCount)).send(anyString());
+    verify(sock1, times(++sock1SendCount)).getBasicRemote().sendText(anyString());
+    verify(sock2, times(sock2SendCount)).getBasicRemote().sendText(anyString());
 
     patchParagraph(sock1, paragraphId, patches[2]);
     assertEquals("ABC\nabc", paragraph.getText());
-    verify(sock1, times(sock1SendCount)).send(anyString());
-    verify(sock2, times(++sock2SendCount)).send(anyString());
+    verify(sock1, times(sock1SendCount)).getBasicRemote().sendText(anyString());
+    verify(sock2, times(++sock2SendCount)).getBasicRemote().sendText(anyString());
 
     patchParagraph(sock2, paragraphId, patches[3]);
     assertEquals("ABC ssss\nabc ssss", paragraph.getText());
-    verify(sock1, times(++sock1SendCount)).send(anyString());
-    verify(sock2, times(sock2SendCount)).send(anyString());
+    verify(sock1, times(++sock1SendCount)).getBasicRemote().sendText(anyString());
+    verify(sock2, times(sock2SendCount)).getBasicRemote().sendText(anyString());
 
     notebook.removeNote(createdNoteInfo.getId(), anonymous);
   }
 
-  private void patchParagraph(NotebookSocket noteSocket, String paragraphId, String patch) {
+  private void patchParagraph(Session noteSocket, String paragraphId, String patch) {
     Message message = new Message(OP.PATCH_PARAGRAPH);
     message.put("patch", patch);
     message.put("id", paragraphId);
@@ -232,15 +233,15 @@ class NotebookServerTest extends AbstractTestRestApi {
       interpreterGroup.getAngularObjectRegistry().add("object1", "value1", note1Id, null);
 
       // create two sockets and open it
-      NotebookSocket sock1 = createWebSocket();
-      NotebookSocket sock2 = createWebSocket();
+      Session sock1 = createWebSocket();
+      Session sock2 = createWebSocket();
 
       assertEquals(sock1, sock1);
       assertNotEquals(sock1, sock2);
 
       notebookServer.onOpen(sock1);
       notebookServer.onOpen(sock2);
-      verify(sock1, times(0)).send(anyString()); // getNote, getAngularObject
+      verify(sock1, times(0)).getBasicRemote().sendText(anyString()); // getNote, getAngularObject
       // open the same notebook from sockets
       notebookServer.onMessage(sock1, new Message(OP.GET_NOTE).put("id", note1Id).toJson());
       notebookServer.onMessage(sock2, new Message(OP.GET_NOTE).put("id", note1Id).toJson());
@@ -258,8 +259,8 @@ class NotebookServerTest extends AbstractTestRestApi {
 
 
       // expect object is broadcasted except for where the update is created
-      verify(sock1, times(0)).send(anyString());
-      verify(sock2, times(1)).send(anyString());
+      verify(sock1, times(0)).getBasicRemote().sendText(anyString());
+      verify(sock2, times(1)).getBasicRemote().sendText(anyString());
     } finally {
       if (note1Id != null) {
         notebook.removeNote(note1Id, anonymous);
@@ -308,10 +309,10 @@ class NotebookServerTest extends AbstractTestRestApi {
       Thread.sleep(1000);
 
       // create two sockets and open it
-      NotebookSocket sock1 = createWebSocket();
+      Session sock1 = createWebSocket();
 
       notebookServer.onOpen(sock1);
-      verify(sock1, times(0)).send(anyString()); // getNote, getAngularObject
+      verify(sock1, times(0)).getBasicRemote().sendText(anyString()); // getNote, getAngularObject
       // open the same notebook from sockets
       notebookServer.onMessage(sock1, new Message(OP.GET_NOTE).put("id", note1Id).toJson());
 
@@ -428,7 +429,7 @@ class NotebookServerTest extends AbstractTestRestApi {
 
 
       // create sockets and open it
-      NotebookSocket sock1 = createWebSocket();
+      Session sock1 = createWebSocket();
       notebookServer.onOpen(sock1);
 
       // Check the AngularObjectRegistry of the interpreterGroup before executing GET_NOTE
@@ -557,8 +558,8 @@ class NotebookServerTest extends AbstractTestRestApi {
       when(mdRegistry.addAndNotifyRemoteProcess(varName, value, "noteId", "paragraphId"))
               .thenReturn(ao1);
 
-      NotebookSocket conn = mock(NotebookSocket.class);
-      NotebookSocket otherConn = mock(NotebookSocket.class);
+      Session conn = mock(Session.class);
+      Session otherConn = mock(Session.class);
 
       final String mdMsg1 = notebookServer.serializeMessage(new Message(OP.ANGULAR_OBJECT_UPDATE)
               .put("angularObject", ao1)
@@ -566,7 +567,7 @@ class NotebookServerTest extends AbstractTestRestApi {
               .put("noteId", "noteId")
               .put("paragraphId", "paragraphId"));
 
-      notebookServer.getConnectionManager().noteSocketMap.put("noteId", asList(conn, otherConn));
+      notebookServer.getConnectionManager().noteSessionMap.put("noteId", asList(conn, otherConn));
 
       // When
       notebookServer.angularObjectClientBind(conn, messageReceived);
@@ -574,7 +575,7 @@ class NotebookServerTest extends AbstractTestRestApi {
       // Then
       verify(mdRegistry, never()).addAndNotifyRemoteProcess(varName, value, "noteId", null);
 
-      verify(otherConn).send(mdMsg1);
+      verify(otherConn).getBasicRemote().sendText(mdMsg1);
     } finally {
       // reset these so that it won't affect other tests
       notebookServer.setNotebook(() -> NotebookServerTest.notebook);
@@ -610,8 +611,8 @@ class NotebookServerTest extends AbstractTestRestApi {
       final AngularObject<String> ao1 = AngularObjectBuilder.build(varName, value, "noteId",
               "paragraphId");
       when(mdRegistry.removeAndNotifyRemoteProcess(varName, "noteId", "paragraphId")).thenReturn(ao1);
-      NotebookSocket conn = mock(NotebookSocket.class);
-      NotebookSocket otherConn = mock(NotebookSocket.class);
+      Session conn = mock(Session.class);
+      Session otherConn = mock(Session.class);
 
       final String mdMsg1 = notebookServer.serializeMessage(new Message(OP.ANGULAR_OBJECT_REMOVE)
               .put("angularObject", ao1)
@@ -619,7 +620,7 @@ class NotebookServerTest extends AbstractTestRestApi {
               .put("noteId", "noteId")
               .put("paragraphId", "paragraphId"));
 
-      notebookServer.getConnectionManager().noteSocketMap.put("noteId", asList(conn, otherConn));
+      notebookServer.getConnectionManager().noteSessionMap.put("noteId", asList(conn, otherConn));
 
       // When
       notebookServer.angularObjectClientUnbind(conn, messageReceived);
@@ -627,7 +628,7 @@ class NotebookServerTest extends AbstractTestRestApi {
       // Then
       verify(mdRegistry, never()).removeAndNotifyRemoteProcess(varName, "noteId", null);
 
-      verify(otherConn).send(mdMsg1);
+      verify(otherConn).getBasicRemote().sendText(mdMsg1);
     } finally {
       // reset these so that it won't affect other tests
       notebookServer.setNotebook(() -> NotebookServerTest.notebook);
@@ -638,8 +639,8 @@ class NotebookServerTest extends AbstractTestRestApi {
   @Test
   void testCreateNoteWithDefaultInterpreterId() throws IOException {
     // create two sockets and open it
-    NotebookSocket sock1 = createWebSocket();
-    NotebookSocket sock2 = createWebSocket();
+    Session sock1 = createWebSocket();
+    Session sock2 = createWebSocket();
 
     assertEquals(sock1, sock1);
     assertNotEquals(sock1, sock2);
@@ -664,7 +665,7 @@ class NotebookServerTest extends AbstractTestRestApi {
       sendCount++;
     }
     // expect the events are broadcasted properly
-    verify(sock1, times(sendCount)).send(anyString());
+    verify(sock1, times(sendCount)).getBasicRemote().sendText(anyString());
 
     String createdNoteId = null;
     for (NoteInfo noteInfo : notebook.getNotesInfo()) {
@@ -839,8 +840,8 @@ class NotebookServerTest extends AbstractTestRestApi {
     }
   }
 
-  private NotebookSocket createWebSocket() {
-    NotebookSocket sock = mock(NotebookSocket.class);
+  private Session createWebSocket() {
+    Session sock = mock(Session.class);
     return sock;
   }
 }
