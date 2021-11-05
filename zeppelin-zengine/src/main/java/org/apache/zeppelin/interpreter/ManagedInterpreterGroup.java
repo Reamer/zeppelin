@@ -61,7 +61,9 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     if (remoteInterpreterProcess == null) {
       return false;
     }
-    return !remoteInterpreterProcess.isRunning();
+    synchronized (interpreterProcessCreationLock) {
+      return !remoteInterpreterProcess.isRunning();
+    }
   }
 
   public RemoteInterpreterProcess getOrCreateInterpreterProcess(String userName,
