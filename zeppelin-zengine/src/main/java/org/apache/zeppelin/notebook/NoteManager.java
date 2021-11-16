@@ -297,6 +297,7 @@ public class NoteManager {
    * Get note from NotebookRepo.
    *
    * @param noteId
+   * @param reload
    * @return return null if not found on NotebookRepo.
    * @throws IOException
    */
