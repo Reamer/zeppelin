@@ -650,8 +650,8 @@ public class NoteManager {
 
   /**
    * Unloads notes when reasonable amount of notes are in loaded state.
-   * Leverage a simple LRU cache for determing evictable notes. Ensure to
-   * not evict notes during save operation (dirty).
+   * Leverage a simple LRU cache for determing evictable notes.
+   * Ensures that no notes with a read or write lock will be evicted.
    */
   private static class NoteUnloader {
 
