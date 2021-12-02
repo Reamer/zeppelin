@@ -98,7 +98,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
       assertNotNull("can't create new note", noteId);
       // use write lock because name is overwritten
-      String paragraphText = TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      String paragraphText = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           note.setName("note");
           Paragraph paragraph = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -168,7 +168,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
 
     String newNoteId =  (String) resp.get("body");
     LOG.info("newNoteId:=" + newNoteId);
-    TestUtils.getInstance(Notebook.class).readNote(newNoteId,
+    TestUtils.getInstance(Notebook.class).processNote(newNoteId,
       newNote -> {
         assertNotNull("Can not find new note by id", newNote);
         // This is partial test as newNote is in memory but is not persistent
@@ -215,7 +215,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
 
     String newNoteId =  (String) resp.get("body");
     LOG.info("newNoteId:=" + newNoteId);
-    TestUtils.getInstance(Notebook.class).readNote(newNoteId,
+    TestUtils.getInstance(Notebook.class).processNote(newNoteId,
       newNote -> {
         assertNotNull("Can not find new note by id", newNote);
         // This is partial test as newNote is in memory but is not persistent
@@ -262,7 +262,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testExportNote", anonymous);
       // use write lock because name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName("source note for export");
@@ -309,7 +309,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       // create test note
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testImportNotebook", anonymous);
       // use write lock because name is overwritten
-      int paragraphSize = TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      int paragraphSize = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName(noteName);
@@ -336,7 +336,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       importId = (String) resp.get("body");
 
       assertNotNull("Did not get back a note id in body", importId);
-      TestUtils.getInstance(Notebook.class).readNote(importId,
+      TestUtils.getInstance(Notebook.class).processNote(importId,
         newNote -> {
           assertEquals("Compare note names", noteName, newNote.getName());
           assertEquals("Compare paragraphs count", paragraphSize, newNote.getParagraphs().size());
@@ -371,7 +371,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     delete.close();
     // make sure note is deleted
     if (!noteId.isEmpty()) {
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         deletedNote -> {
           assertNull("Deleted note should be null", deletedNote);
           return null;
@@ -394,7 +394,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     try {
       // Create note to clone
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testCloneNote", anonymous);
-      int paragraphSize = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      int paragraphSize = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName("source note for clone");
@@ -420,7 +420,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
 
       newNoteId =  (String) resp.get("body");
       LOG.info("newNoteId:=" + newNoteId);
-      TestUtils.getInstance(Notebook.class).readNote(newNoteId,
+      TestUtils.getInstance(Notebook.class).processNote(newNoteId,
         newNote -> {
           assertNotNull("Can not find new note by id", newNote);
           assertEquals("Compare note names", noteName, newNote.getName());
@@ -464,7 +464,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       // Create note to run test.
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testNoteJobs", anonymous);
       // use write lock because name is overwritten
-      String paragraphId = TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      String paragraphId = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName("note for run test");
@@ -479,7 +479,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
           return paragraph.getId();
         });
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(anonymous, true, false, new HashMap<>());
@@ -491,10 +491,10 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
 
       // wait until job is finished or timeout.
       int timeout = 1;
-      boolean terminated = TestUtils.getInstance(Notebook.class).readNote(noteId, note -> note.getParagraph(0).isTerminated());
+      boolean terminated = TestUtils.getInstance(Notebook.class).processNote(noteId, note -> note.getParagraph(0).isTerminated());
       while (!terminated) {
         Thread.sleep(1000);
-        terminated = TestUtils.getInstance(Notebook.class).readNote(noteId, note -> note.getParagraph(0).isTerminated());
+        terminated = TestUtils.getInstance(Notebook.class).processNote(noteId, note -> note.getParagraph(0).isTerminated());
         if (timeout++ > 10) {
           LOG.info("testNoteJobs timeout job.");
           break;
@@ -540,7 +540,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       // Create note to run test.
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testGetNoteJob", anonymous);
       // use write lock because name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName("note for run test");
@@ -556,7 +556,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
           return null;
         });
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(anonymous, true, false, new HashMap<>());
@@ -582,10 +582,10 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
 
       // wait until job is finished or timeout.
       int timeout = 1;
-      boolean terminated = TestUtils.getInstance(Notebook.class).readNote(noteId, note -> note.getParagraph(0).isTerminated());
+      boolean terminated = TestUtils.getInstance(Notebook.class).processNote(noteId, note -> note.getParagraph(0).isTerminated());
       while (!terminated) {
         Thread.sleep(100);
-        terminated = TestUtils.getInstance(Notebook.class).readNote(noteId, note -> note.getParagraph(0).isTerminated());
+        terminated = TestUtils.getInstance(Notebook.class).processNote(noteId, note -> note.getParagraph(0).isTerminated());
         if (timeout++ > 10) {
           LOG.info("testGetNoteJob timeout job.");
           break;
@@ -608,7 +608,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       // Create note to run test.
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testRunParagraphWithParams", anonymous);
       // use write lock because name is overwritten
-      String paragraphId = TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      String paragraphId = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertNotNull("can't create new note", note);
           note.setName("note for run test");
@@ -624,7 +624,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
         });
 
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(anonymous, true, false, new HashMap<>());
@@ -641,7 +641,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       postParagraph.close();
       Thread.sleep(1000);
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         retrNote -> {
           Paragraph retrParagraph = retrNote.getParagraph(paragraphId);
           Map<String, Object> params = retrParagraph.settings.getParams();
@@ -665,7 +665,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_CRON_ENABLE.getVarName(), "true");
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testJobs", anonymous);
       // Use write lock, because name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           note.setName("note for run test");
           Paragraph paragraph = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -677,7 +677,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
           return null;
         });
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(AuthenticationInfo.ANONYMOUS, false, false, new HashMap<>());
@@ -727,7 +727,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_CRON_ENABLE.getVarName(), "false");
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testCronDisable", anonymous);
       // use write lock because Name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           note.setName("note for run test");
           Paragraph paragraph = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -739,7 +739,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
           return null;
         });
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(AuthenticationInfo.ANONYMOUS, true, true, new HashMap<>());
@@ -760,12 +760,12 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_CRON_FOLDERS.getVarName(), "/System");
 
       // use write lock, because Name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           note.setName("System/test2");
           return null;
         });
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(AuthenticationInfo.ANONYMOUS, true, true, new HashMap<>());
@@ -801,7 +801,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testRegressionZEPPELIN_527", anonymous);
       // use write lock because name is overwritten
-      TestUtils.getInstance(Notebook.class).writeNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           note.setName("note for run test");
           Paragraph paragraph = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -809,7 +809,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
           return null;
         });
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           try {
             note.runAll(AuthenticationInfo.ANONYMOUS, true, false, new HashMap<>());
@@ -857,8 +857,8 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       String newParagraphId = (String) resp.get("body");
       LOG.info("newParagraphId:=" + newParagraphId);
 
-      Paragraph lastParagraph = TestUtils.getInstance(Notebook.class).readNote(noteId, Note::getLastParagraph);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      Paragraph lastParagraph = TestUtils.getInstance(Notebook.class).processNote(noteId, Note::getLastParagraph);
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         retrNote -> {
           Paragraph newParagraph = retrNote.getParagraph(newParagraphId);
           assertNotNull("Can not find new paragraph by id", newParagraph);
@@ -875,7 +875,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       assertThat("Test insert method:", post2, isAllowed());
       post2.close();
 
-      Paragraph paragraphAtIdx0 =TestUtils.getInstance(Notebook.class).readNote(noteId, note -> note.getParagraphs().get(0));
+      Paragraph paragraphAtIdx0 =TestUtils.getInstance(Notebook.class).processNote(noteId, note -> note.getParagraphs().get(0));
       assertEquals("title2", paragraphAtIdx0.getTitle());
       assertEquals("text2", paragraphAtIdx0.getText());
 
@@ -888,7 +888,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       assertThat("Test insert method:", post3, isAllowed());
       post3.close();
 
-      Paragraph p = TestUtils.getInstance(Notebook.class).readNote(noteId, Note::getLastParagraph);
+      Paragraph p = TestUtils.getInstance(Notebook.class).processNote(noteId, Note::getLastParagraph);
       assertEquals("title3", p.getTitle());
       assertEquals("text3", p.getText());
       Map result = ((List<Map>) p.getConfig().get("results")).get(0);
@@ -917,7 +917,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       post.close();
 
       String newParagraphId = (String) resp.get("body");
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         noteP -> {
           Paragraph newParagraph = noteP.getParagraph(newParagraphId);
           assertEquals("title1", newParagraph.getTitle());
@@ -931,7 +931,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       assertThat("Test update method:", put, isAllowed());
       put.close();
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         noteP -> {
           Paragraph updatedParagraph = noteP.getParagraph(newParagraphId);
           assertEquals("title1", updatedParagraph.getTitle());
@@ -944,7 +944,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
               updateBothRequest);
       updatePut.close();
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         noteP -> {
           Paragraph updatedBothParagraph = noteP.getParagraph(newParagraphId);
           assertEquals("updated title", updatedBothParagraph.getTitle());
@@ -964,7 +964,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testGetParagraph", anonymous);
-      String pId = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      String pId = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           p.setTitle("hello");
@@ -1003,7 +1003,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testMoveParagraph", anonymous);
-      Paragraph p2 = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      Paragraph p2 = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           p.setTitle("title1");
@@ -1020,7 +1020,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       assertThat("Test post method: ", post, isAllowed());
       post.close();
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         retrNote -> {
           Paragraph paragraphAtIdx0 = retrNote.getParagraphs().get(0);
 
@@ -1048,7 +1048,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1_testDeleteParagraph", anonymous);
-      Paragraph p = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      Paragraph p = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph ptmp = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           ptmp.setTitle("title1");
@@ -1063,7 +1063,7 @@ public class ZeppelinRestApiTest extends AbstractTestRestApi {
       assertThat("Test delete method: ", delete, isAllowed());
       delete.close();
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         retrNote -> {
           Paragraph retrParagrah = retrNote.getParagraph(p.getId());
           assertNull("paragraph should be deleted", retrParagrah);

@@ -213,7 +213,7 @@ public class LuceneSearch extends SearchService {
 
   private void updateIndexNoteName(String noteId) {
      try {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note != null) {
             String noteName = note.getName();
@@ -234,7 +234,7 @@ public class LuceneSearch extends SearchService {
   @Override
   public void updateParagraphIndex(String noteId, String paragraphId) {
     try {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note != null) {
             Paragraph p = note.getParagraph(paragraphId);
@@ -327,7 +327,7 @@ public class LuceneSearch extends SearchService {
   @Override
   public void addNoteIndex(String noteId) {
     try {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note != null) {
             addIndexDocAsync(note);
@@ -343,7 +343,7 @@ public class LuceneSearch extends SearchService {
   @Override
   public void addParagraphIndex(String noteId, String paragraphId) {
     try {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note != null) {
             Paragraph p = note.getParagraph(paragraphId);

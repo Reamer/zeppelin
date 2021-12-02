@@ -101,7 +101,7 @@ public class QuartzSchedulerService implements SchedulerService {
   @Override
   public boolean refreshCron(String noteId) throws IOException {
     removeCron(noteId);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         if (note == null) {
           LOGGER.warn("Skip refresh cron of note: {} because there's no such note", noteId);

@@ -254,7 +254,7 @@ public class NotebookRestApi extends AbstractRestApi {
     HashMap<String, HashSet<String>> permMap =
             GSON.fromJson(req, new TypeToken<HashMap<String, HashSet<String>>>() {
             }.getType());
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         HashSet<String> readers = permMap.get("readers");
@@ -395,7 +395,7 @@ public class NotebookRestApi extends AbstractRestApi {
             request.getAddingEmptyParagraph(),
             getServiceContext(),
             new RestServiceCallback<>());
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         AuthenticationInfo subject = new AuthenticationInfo(authenticationService.getPrincipal());
         if (request.getParagraphs() != null) {
@@ -513,7 +513,7 @@ public class NotebookRestApi extends AbstractRestApi {
     String user = authenticationService.getPrincipal();
     LOGGER.info("Insert paragraph {} {}", noteId, message);
     AuthenticationInfo subject = new AuthenticationInfo(user);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanWrite(noteId, "Insufficient privileges you cannot add paragraph to this note");
@@ -545,7 +545,7 @@ public class NotebookRestApi extends AbstractRestApi {
   public Response getParagraph(@PathParam("noteId") String noteId,
                                @PathParam("paragraphId") String paragraphId) throws IOException {
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRead(noteId, "Insufficient privileges you cannot get this paragraph");
@@ -570,7 +570,7 @@ public class NotebookRestApi extends AbstractRestApi {
 
     String user = authenticationService.getPrincipal();
     LOGGER.info("{} will update paragraph {} {}", user, noteId, paragraphId);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanWrite(noteId, "Insufficient privileges you cannot update this paragraph");
@@ -609,7 +609,7 @@ public class NotebookRestApi extends AbstractRestApi {
 
     String user = authenticationService.getPrincipal();
     LOGGER.info("{} will update paragraph config {} {}", user, noteId, paragraphId);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanWrite(noteId, "Insufficient privileges you cannot update this paragraph config");
@@ -732,7 +732,7 @@ public class NotebookRestApi extends AbstractRestApi {
     }
 
     LOGGER.info("Run note jobs, noteId: {}, blocking: {}, isolated: {}, params: {}", noteId, blocking, isolated, params);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         AuthenticationInfo subject = new AuthenticationInfo(authenticationService.getPrincipal());
         subject.setRoles(authenticationService.getAssociatedRoles());
@@ -764,7 +764,7 @@ public class NotebookRestApi extends AbstractRestApi {
       throws IOException, IllegalArgumentException {
 
     LOGGER.info("Stop note jobs {} ", noteId);
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRun(noteId, "Insufficient privileges you cannot stop this job for this note");
@@ -792,7 +792,7 @@ public class NotebookRestApi extends AbstractRestApi {
       throws IOException, IllegalArgumentException {
 
     LOGGER.info("Get note job status.");
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRead(noteId, "Insufficient privileges you cannot get job status");
@@ -817,7 +817,7 @@ public class NotebookRestApi extends AbstractRestApi {
       throws IOException, IllegalArgumentException {
 
     LOGGER.info("Get note paragraph job status.");
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRead(noteId, "Insufficient privileges you cannot get job status");
@@ -848,7 +848,7 @@ public class NotebookRestApi extends AbstractRestApi {
 
     LOGGER.info("Run paragraph job asynchronously {} {} {}", noteId, paragraphId, message);
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         Paragraph paragraph = note.getParagraph(paragraphId);
@@ -888,7 +888,7 @@ public class NotebookRestApi extends AbstractRestApi {
       throws IOException, IllegalArgumentException {
     LOGGER.info("Run paragraph synchronously {} {} {}", noteId, paragraphId, message);
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         Paragraph paragraph = note.getParagraph(paragraphId);
@@ -956,7 +956,7 @@ public class NotebookRestApi extends AbstractRestApi {
     CronRequest request = CronRequest.fromJson(message);
 
     // use write lock, because config is overwritten
-    return notebook.writeNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRun(noteId, "Insufficient privileges you cannot set a cron job for this note");
@@ -993,7 +993,7 @@ public class NotebookRestApi extends AbstractRestApi {
     LOGGER.info("Remove cron job note {}", noteId);
 
     // use write lock because config is overwritten
-    return notebook.writeNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserIsOwner(noteId,
@@ -1026,7 +1026,7 @@ public class NotebookRestApi extends AbstractRestApi {
 
     LOGGER.info("Get cron job note {}", noteId);
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         checkIfNoteIsNotNull(note, noteId);
         checkIfUserCanRead(noteId, "Insufficient privileges you cannot get cron information");

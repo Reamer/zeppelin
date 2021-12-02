@@ -105,7 +105,7 @@ public class NotebookSecurityRestApiTest extends AbstractTestRestApi {
     userTryRemoveNote(noteId, "user2", "password3", isForbidden());
     userTryRemoveNote(noteId, "user1", "password2", isAllowed());
 
-    TestUtils.getInstance(Notebook.class).readNote(noteId,
+    TestUtils.getInstance(Notebook.class).processNote(noteId,
       deletedNote -> {
         assertNull("Deleted note should be null", deletedNote);
         return null;
@@ -145,7 +145,7 @@ public class NotebookSecurityRestApiTest extends AbstractTestRestApi {
     post.close();
     String newNoteId = (String) resp.get("body");
     Notebook notebook = TestUtils.getInstance(Notebook.class);
-    notebook.readNote(newNoteId,
+    notebook.processNote(newNoteId,
       newNote -> {
         assertNotNull("Can not find new note by id", newNote);
         return null;
@@ -159,7 +159,7 @@ public class NotebookSecurityRestApiTest extends AbstractTestRestApi {
     delete.close();
     // make sure note is deleted
     if (!noteId.isEmpty()) {
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         deletedNote -> {
           assertNull("Deleted note should be null", deletedNote);
           return null;

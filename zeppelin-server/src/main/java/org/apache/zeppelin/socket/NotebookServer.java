@@ -308,7 +308,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
       }
 
       if (Message.isDisabledForRunningNotes(receivedMessage.op)) {
-        boolean noteRunning = getNotebook().readNote((String) receivedMessage.get("noteId"),
+        boolean noteRunning = getNotebook().processNote((String) receivedMessage.get("noteId"),
           note -> note != null && note.isRunning());
         if (noteRunning) {
           throw new Exception("Note is now running sequentially. Can not be performed: " + receivedMessage.op);
@@ -580,7 +580,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
     List<InterpreterSettingsList> settingList = new ArrayList<>();
     String noteId = (String) fromMessage.data.get("noteId");
 
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         if (note != null) {
           List<InterpreterSetting> bindedSettings =
@@ -600,7 +600,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
     List<InterpreterSettingsList> settingList = new ArrayList<>();
     String noteId = (String) fromMessage.data.get("noteId");
     // use write lock, because defaultInterpreterGroup is overwritten
-    getNotebook().writeNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         if (note != null) {
           List<String> settingIdList =
@@ -993,7 +993,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
           public void onFailure(Exception ex, ServiceContext context) throws IOException {
             super.onFailure(ex, context);
          // If there was a failure, then resend the latest notebook information to update stale UI
-            getNotebook().readNote(noteId,
+            getNotebook().processNote(noteId,
               note -> {
                 broadcastNote(note);
                 return null;
@@ -1247,7 +1247,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
 
   protected void convertNote(NotebookSocket conn, Message fromMessage) throws IOException {
     String noteId = fromMessage.get("noteId").toString();
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         if (note == null) {
           throw new IOException("No such note: " + noteId);
@@ -1379,7 +1379,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
                     .put("noteId", noteId)
                     .put("paragraphId", ao.getParagraphId()),
                 conn);
-            getNotebook().readNote(noteId,
+            getNotebook().processNote(noteId,
               note -> {
                 note.addOrUpdateAngularObject(interpreterGroupId, ao);
                 return null;
@@ -1403,7 +1403,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
           "target paragraph not specified for " + "angular value bind");
     }
 
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         if (note != null) {
           InterpreterGroup interpreterGroup;
@@ -1437,7 +1437,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
           "target paragraph not specified for " + "angular value unBind");
     }
 
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         if (note != null) {
           InterpreterGroup interpreterGroup;
@@ -1612,7 +1612,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
     String title = (String) fromMessage.get("title");
     Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         getNotebookService().runParagraph(note, paragraphId, title, text, params, config, null,
           false, false, context,
@@ -1670,7 +1670,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
             super.onSuccess(revision, context);
             if (!Revision.isEmpty(revision)) {
 
-              List<Revision> revisions = getNotebook().readNote(noteId,
+              List<Revision> revisions = getNotebook().processNote(noteId,
                 note -> getNotebook().listRevisionHistory(noteId, note.getPath(), context.getAutheInfo()));
               conn.send(serializeMessage(new Message(OP.LIST_REVISION_HISTORY).put("revisionList", revisions)));
             } else {
@@ -1791,7 +1791,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
         .put("type", type)
         .put("data", output);
     try {
-      getNotebook().readNote(noteId,
+      getNotebook().processNote(noteId,
         note -> {
           if (note == null) {
             LOG.warn("Note {} not found", noteId);
@@ -1824,7 +1824,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
     }
 
     try {
-      getNotebook().readNote(noteId,
+      getNotebook().processNote(noteId,
         note -> {
           if (note == null) {
             // It is possible the note is removed, but the job is still running
@@ -1891,7 +1891,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
                             List<Integer> paragraphIndices,
                             List<String> paragraphIds,
                             String curParagraphId) throws IOException {
-    getNotebook().readNote(noteId,
+    getNotebook().processNote(noteId,
       note -> {
         final List<String> toBeRunParagraphIds = new ArrayList<>();
         if (note == null) {
@@ -2053,7 +2053,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
 
       try {
         String noteId = p.getNote().getId();
-        getNotebook().readNote(noteId,
+        getNotebook().processNote(noteId,
           note -> {
             if (note == null) {
               LOG.warn("Note {} doesn't existed.", noteId);
@@ -2080,7 +2080,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
   @Override
   public void checkpointOutput(String noteId, String paragraphId) {
     try {
-      getNotebook().readNote(noteId,
+      getNotebook().processNote(noteId,
         note -> {
           note.getParagraph(paragraphId).checkpointOutput();
           getNotebook().saveNote(note, AuthenticationInfo.ANONYMOUS);
@@ -2159,7 +2159,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
 
   private void updateNoteAngularObject(String noteId, AngularObject angularObject, String interpreterGroupId) throws IOException {
     List<InterpreterSetting> intpSettings = getNotebook().
-      readNote(noteId, note -> note.getBindedInterpreterSettings(new ArrayList<>(authorizationService.getOwners(note.getId()))));
+      processNote(noteId, note -> note.getBindedInterpreterSettings(new ArrayList<>(authorizationService.getOwners(note.getId()))));
     if (intpSettings.isEmpty()) {
       return;
     }
@@ -2244,7 +2244,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
   public void onParaInfosReceived(String noteId, String paragraphId,
                                   String interpreterSettingId, Map<String, String> metaInfos) {
     try {
-      getNotebook().readNote(noteId,
+      getNotebook().processNote(noteId,
         note -> {
           if (note != null) {
             Paragraph paragraph = note.getParagraph(paragraphId);
@@ -2286,7 +2286,7 @@ public class NotebookServer implements AngularObjectRegistryListener,
             "Allowed users or roles: " + allowed;
         throw new ServiceException(errorMsg);
       }
-      return getNotebook().readNote(noteId,
+      return getNotebook().processNote(noteId,
         note -> {
           if (null == note) {
             throw new IOException("Not found this note : " + noteId);

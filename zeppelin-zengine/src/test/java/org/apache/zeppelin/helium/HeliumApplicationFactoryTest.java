@@ -99,7 +99,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
         "", "");
 
     String note1Id = notebook.createNote("note1", anonymous);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Tmp -> {
         return note1Tmp;
       });
@@ -148,7 +148,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
         "", "");
 
     String note1Id = notebook.createNote("note1", anonymous);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Tmp -> {
         return note1Tmp;
       });
@@ -191,7 +191,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
         "", "");
 
     String note1Id = notebook.createNote("note1", anonymous);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Tmp -> {
         return note1Tmp;
       });
@@ -223,7 +223,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
   public void testInterpreterUnbindOfNullReplParagraph() throws IOException {
     // create note
     String note1Id = notebook.createNote("note1", anonymous);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Tmp -> {
         return note1Tmp;
       });
@@ -258,7 +258,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
         "", "");
 
     String note1Id = notebook.createNote("note1", anonymous);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Tmp -> {
         return note1Tmp;
       });

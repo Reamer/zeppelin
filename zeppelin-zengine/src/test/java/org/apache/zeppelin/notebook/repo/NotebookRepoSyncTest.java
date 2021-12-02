@@ -164,7 +164,7 @@ public class NotebookRepoSyncTest {
 
     /* create note */
     String noteId = notebook.createNote("/test", "test", anonymous);
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         note.setInterpreterFactory(mock(InterpreterFactory.class));
         Paragraph p1 = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -187,7 +187,7 @@ public class NotebookRepoSyncTest {
         notebookRepoSync.list(1, anonymous).get(0).getPath(), anonymous).getParagraphs().size());
 
     /* save to storage under index 0 (first storage) */
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         notebookRepoSync.save(0, note, anonymous);
         return null;
@@ -210,7 +210,7 @@ public class NotebookRepoSyncTest {
         notebookRepoSync.list(1, anonymous).get(0).getId(),
         notebookRepoSync.list(1, anonymous).get(0).getPath(), anonymous).getParagraphs().size());
     /* check whether same paragraph id */
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         Paragraph p1 = note.getParagraph(0);
         assertEquals(p1.getId(), notebookRepoSync.get(0,
@@ -317,7 +317,7 @@ public class NotebookRepoSyncTest {
     // create note
     String noteIdTmp = vNotebookSync.createNote("/test", "test", anonymous);
     System.out.println(noteIdTmp);
-    Note note = vNotebookSync.readNote(noteIdTmp,
+    Note note = vNotebookSync.processNote(noteIdTmp,
       noteTmp -> {
         return noteTmp;
     });
@@ -350,7 +350,7 @@ public class NotebookRepoSyncTest {
     /* scenario 1 - note exists with acl on main storage */
     AuthenticationInfo user1 = new AuthenticationInfo("user1");
     String noteId = notebook.createNote("/test", "test", user1);
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         assertEquals(0, note.getParagraphs().size());
         return null;
@@ -370,7 +370,7 @@ public class NotebookRepoSyncTest {
     assertEquals(0, authorizationService.getWriters(noteId).size());
 
     /* update note and save on secondary storage */
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         note.setInterpreterFactory(mock(InterpreterFactory.class));
         Paragraph p1 = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -405,7 +405,7 @@ public class NotebookRepoSyncTest {
 
     /* scenario 2 - note doesn't exist on main storage */
     /* remove from main storage */
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         notebookRepoSync.remove(0, noteId, note.getPath(), user1);
         return null;

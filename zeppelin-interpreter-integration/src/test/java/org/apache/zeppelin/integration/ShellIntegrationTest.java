@@ -53,7 +53,7 @@ public class ShellIntegrationTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", AuthenticationInfo.ANONYMOUS);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
 

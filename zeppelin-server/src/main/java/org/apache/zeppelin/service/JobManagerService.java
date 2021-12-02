@@ -64,7 +64,7 @@ public class JobManagerService {
       return new ArrayList<>();
     }
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       jobNote -> {
         List<NoteJobInfo> notesJobInfo = new ArrayList<>();
         if (jobNote == null) {
@@ -91,7 +91,7 @@ public class JobManagerService {
     List<NoteJobInfo> notesJobInfo = new LinkedList<>();
     for (NoteInfo noteInfo : notebook.getNotesInfo()) {
       if (authorizationService.isOwner(context.getUserAndRoles(), noteInfo.getId())) {
-        NoteJobInfo noteJobInfo = notebook.readNote(noteInfo.getId(), NoteJobInfo::new);
+        NoteJobInfo noteJobInfo = notebook.processNote(noteInfo.getId(), NoteJobInfo::new);
         if (noteJobInfo.unixTimeLastRun > lastUpdateServerUnixTime) {
           notesJobInfo.add(noteJobInfo);
         }

@@ -297,7 +297,7 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
       // when: create new note
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
 
-      String pId = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      String pId = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           Map<String, Object> config = p.getConfig();
@@ -311,21 +311,21 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
           return p.getId();
         });
 
-      Status status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      Status status = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(pId);
           return p.getStatus();
         });
       while (status != Status.FINISHED) {
          Thread.sleep(100);
-         status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+         status = TestUtils.getInstance(Notebook.class).processNote(noteId,
            note -> {
              Paragraph p = note.getParagraph(pId);
               return p.getStatus();
            });
       }
 
-      List<InterpreterSetting> settings = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      List<InterpreterSetting> settings = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(pId);
           assertEquals(p.getReturn().message().get(0).getData(), getSimulatedMarkdownResult("markdown"));
@@ -344,7 +344,7 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
       }
 
       // when: run markdown paragraph, again
-      String p2Id = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      String p2Id = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           Map<String, Object> config = p.getConfig();
@@ -358,14 +358,14 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
           return p.getId();
         });
 
-      status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      status = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(p2Id);
           return p.getStatus();
         });
       while (status != Status.FINISHED) {
         Thread.sleep(100);
-        status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+        status = TestUtils.getInstance(Notebook.class).processNote(noteId,
           note -> {
             Paragraph p = note.getParagraph(p2Id);
             return p.getStatus();
@@ -373,7 +373,7 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
       }
 
       // then
-      status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      status = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(p2Id);
           assertEquals(p.getReturn().message().get(0).getData(),
@@ -393,7 +393,7 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
     try {
       // when: create new note
       noteId = TestUtils.getInstance(Notebook.class).createNote("note2", anonymous);
-      String pId = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      String pId = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           Map<String, Object> config = p.getConfig();
@@ -406,20 +406,20 @@ public class InterpreterRestApiTest extends AbstractTestRestApi {
           return p.getId();
         });
 
-      Status status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      Status status = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(pId);
           return p.getStatus();
         });
       while (status != Status.FINISHED) {
         Thread.sleep(100);
-        status = TestUtils.getInstance(Notebook.class).readNote(noteId,
+        status = TestUtils.getInstance(Notebook.class).processNote(noteId,
           note -> {
             Paragraph p = note.getParagraph(pId);
             return p.getStatus();
           });
       }
-      List<InterpreterSetting> settings = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      List<InterpreterSetting> settings = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.getParagraph(pId);
           assertEquals(p.getReturn().message().get(0).getData(), getSimulatedMarkdownResult("markdown"));

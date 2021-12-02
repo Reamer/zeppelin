@@ -159,7 +159,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     try {
       // create new note
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           p.setText("%spark import java.util.Date\n" +
@@ -215,7 +215,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           p.setText("%spark print(sc.parallelize(1 to 10).reduce(_ + _))");
@@ -236,7 +236,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           File tmpJsonFile = File.createTempFile("test", ".json");
@@ -277,7 +277,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           File tmpCSVFile = File.createTempFile("test", ".csv");
@@ -303,7 +303,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           // test basic dataframe api
           Paragraph p = note.addNewParagraph(anonymous);
@@ -404,7 +404,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
 
@@ -442,7 +442,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           // run markdown paragraph, again
           Paragraph p = note.addNewParagraph(anonymous);
@@ -564,7 +564,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     try {
       // create new note
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      note2Id = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      note2Id = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p0 = note.addNewParagraph(anonymous);
           // z.run(paragraphIndex)
@@ -616,7 +616,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
 
           // run paragraph in note2 via paragraph in note1
           String noteId2 = TestUtils.getInstance(Notebook.class).createNote("note2", anonymous);
-          TestUtils.getInstance(Notebook.class).readNote(noteId2,
+          TestUtils.getInstance(Notebook.class).processNote(noteId2,
             note2 -> {
               Paragraph p20 = note2.addNewParagraph(anonymous);
               p20.setText("%spark val a = 1");
@@ -656,7 +656,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
           p1.setText("%spark z.put(\"var_1\", \"hello world\")");
@@ -705,7 +705,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String note2Id = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      note2Id = TestUtils.getInstance(Notebook.class).readNote(noteId,
+      note2Id = TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           // register global hook & note1 hook
           Paragraph p1 = note.addNewParagraph(anonymous);
@@ -726,7 +726,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
           assertEquals("1\n3\n5\n4\n2\n", p2.getReturn().message().get(0).getData());
 
           String note2Tmp = TestUtils.getInstance(Notebook.class).createNote("note2", anonymous);
-          TestUtils.getInstance(Notebook.class).readNote(note2Tmp,
+          TestUtils.getInstance(Notebook.class).processNote(note2Tmp,
             note2 -> {
               Paragraph p3 = note2.addNewParagraph(anonymous);
               p3.setText("%python print(6)");
@@ -750,7 +750,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
 
@@ -792,7 +792,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           String code = "%spark println(z.textbox(\"my_input\", \"default_name\"))\n" +
@@ -835,7 +835,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           String code = "%spark.pyspark print(z.input('my_input', 'default_name'))\n" +
@@ -876,7 +876,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
 
@@ -991,7 +991,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
 
@@ -1059,7 +1059,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
 
@@ -1127,7 +1127,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     String noteId = null;
     try {
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
 
@@ -1162,7 +1162,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     try {
       TestUtils.getInstance(Notebook.class).getInterpreterSettingManager().close();
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           p.setText("%spark.conf spark.jars.packages\tcom.databricks:spark-csv_2.11:1.2.0");
@@ -1201,7 +1201,7 @@ public abstract class ZeppelinSparkClusterTest extends AbstractTestRestApi {
     try {
       TestUtils.getInstance(Notebook.class).getInterpreterSettingManager().close();
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p = note.addNewParagraph(anonymous);
           p.setText("%spark.conf SPARK_HOME invalid_spark_home");

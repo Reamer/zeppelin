@@ -122,7 +122,7 @@ public class HeliumRestApi {
   public Response suggest(@PathParam("noteId") String noteId,
           @PathParam("paragraphId") String paragraphId) {
     try {
-      return notebook.readNote(noteId,
+      return notebook.processNote(noteId,
         note -> {
           if (note == null) {
             return new JsonResponse<>(Response.Status.NOT_FOUND, "Note " + noteId + " not found").build();
@@ -151,7 +151,7 @@ public class HeliumRestApi {
   public Response load(@PathParam("noteId") String noteId,
           @PathParam("paragraphId") String paragraphId, String heliumPackage) {
     try {
-      return notebook.readNote(noteId,
+      return notebook.processNote(noteId,
         note -> {
           if (note == null) {
             return new JsonResponse<>(Response.Status.NOT_FOUND, "Note " + noteId + " not found").build();

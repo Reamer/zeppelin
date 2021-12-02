@@ -151,7 +151,7 @@ public class NotebookServiceTest {
     // get home note
     String homeNoteId = notebookService.getHomeNote(context, callback);
     assertNull(homeNoteId);
-    notebook.readNote(homeNoteId,
+    notebook.processNote(homeNoteId,
       homeNote -> {
         verify(callback).onSuccess(homeNote, context);
         return null;
@@ -159,7 +159,7 @@ public class NotebookServiceTest {
 
     // create note
     String note1Id = notebookService.createNote("/folder_1/note1", "test", true, context, callback);
-    Note note1 = notebook.readNote(note1Id,
+    Note note1 = notebook.processNote(note1Id,
       note1Read -> {
         assertEquals("note1", note1Read.getName());
         assertEquals(1, note1Read.getParagraphCount());
@@ -216,7 +216,7 @@ public class NotebookServiceTest {
 
     // create another note
     note2Id = notebookService.createNote("/note2", "test", true, context, callback);
-    notebook.readNote(note2Id,
+    notebook.processNote(note2Id,
       note2 -> {
         assertEquals("note2", note2.getName());
         verify(callback).onSuccess(note2, context);
@@ -226,7 +226,7 @@ public class NotebookServiceTest {
     // rename note
     reset(callback);
     notebookService.renameNote(note2Id, "new_note2", true, context, callback);
-    notebook.readNote(note2Id,
+    notebook.processNote(note2Id,
       note2 -> {
         verify(callback).onSuccess(note2, context);
         assertEquals("new_note2", note2.getName());
@@ -263,7 +263,7 @@ public class NotebookServiceTest {
     // import note
     reset(callback);
     String importedNoteId = notebookService.importNote("/Imported Note", "{}", context, callback);
-    notebook.readNote(importedNoteId,
+    notebook.processNote(importedNoteId,
       importedNote -> {
         assertNotNull(importedNote);
         verify(callback).onSuccess(importedNote, context);
@@ -274,9 +274,9 @@ public class NotebookServiceTest {
     reset(callback);
     String clonedNoteId = notebookService.cloneNote(importedNoteId, "/Backup/Cloned Note",
         context, callback);
-    notebook.readNote(importedNoteId,
+    notebook.processNote(importedNoteId,
       importedNote -> {
-        notebook.readNote(clonedNoteId,
+        notebook.processNote(clonedNoteId,
           clonedNote -> {
             assertEquals(importedNote.getParagraphCount(), clonedNote.getParagraphCount());
             verify(callback).onSuccess(clonedNote, context);
@@ -293,7 +293,7 @@ public class NotebookServiceTest {
 
     // test moving corrupted note to trash
     String corruptedNoteId = notebookService.createNote("/folder_1/corruptedNote", "test", true, context, callback);
-    notebook.readNote(corruptedNoteId,
+    notebook.processNote(corruptedNoteId,
       corruptedNote -> {
         String corruptedNotePath = notebookDir.getAbsolutePath() + corruptedNote.getPath() + "_" + corruptedNote.getId() + ".zpln";
         // corrupt note
@@ -388,7 +388,7 @@ public class NotebookServiceTest {
   @Test
   public void testRenameNoteRejectsDuplicate() throws IOException {
     String note1Id = notebookService.createNote("/folder/note1", "test", true, context, callback);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         assertEquals("note1", note1.getName());
         verify(callback).onSuccess(note1, context);
@@ -397,7 +397,7 @@ public class NotebookServiceTest {
 
     reset(callback);
     String note2Id = notebookService.createNote("/folder/note2", "test", true, context, callback);
-    notebook.readNote(note2Id,
+    notebook.processNote(note2Id,
       note2 -> {
         assertEquals("note2", note2.getName());
         verify(callback).onSuccess(note2, context);
@@ -417,7 +417,7 @@ public class NotebookServiceTest {
   public void testParagraphOperations() throws IOException {
     // create note
     String note1Id = notebookService.createNote("note1", "python", false, context, callback);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         assertEquals("note1", note1.getName());
         assertEquals(0, note1.getParagraphCount());
@@ -432,7 +432,7 @@ public class NotebookServiceTest {
         callback);
     assertNotNull(p);
     verify(callback).onSuccess(p, context);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         assertEquals(1, note1.getParagraphCount());
         return null;
@@ -448,7 +448,7 @@ public class NotebookServiceTest {
     // move paragraph
     reset(callback);
     notebookService.moveParagraph(note1Id, p.getId(), 0, context, callback);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         assertEquals(p, note1.getParagraph(0));
         verify(callback).onSuccess(p, context);
@@ -459,7 +459,7 @@ public class NotebookServiceTest {
     reset(callback);
     p.getConfig().put("colWidth", "6.0");
     p.getConfig().put("title", true);
-    boolean runStatus = notebook.readNote(note1Id,
+    boolean runStatus = notebook.processNote(note1Id,
       note1 -> {
         return notebookService.runParagraph(note1, p.getId(), "my_title", "1+1",
           new HashMap<>(), new HashMap<>(), null, false, false, context, callback);
@@ -470,7 +470,7 @@ public class NotebookServiceTest {
 
     // run paragraph synchronously via correct code
     reset(callback);
-    runStatus = notebook.readNote(note1Id,
+    runStatus = notebook.processNote(note1Id,
       note1 -> {
         return notebookService.runParagraph(note1, p.getId(), "my_title", "1+1",
           new HashMap<>(), new HashMap<>(), null, false, true, context, callback);
@@ -488,7 +488,7 @@ public class NotebookServiceTest {
             context, callback));
 
     reset(callback);
-    runStatus = notebook.readNote(note1Id,
+    runStatus = notebook.processNote(note1Id,
       note1 -> {
         return notebookService.runParagraph(note1, p.getId(), "my_title", "invalid_code",
           new HashMap<>(), new HashMap<>(), null, false, true, context, callback);

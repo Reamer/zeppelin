@@ -372,7 +372,7 @@ public class HeliumApplicationFactory implements ApplicationEventListener, NoteE
       return null;
     }
     try {
-      return notebook.readNote(noteId,
+      return notebook.processNote(noteId,
         note -> {
           if (note == null) {
             logger.warn("Note {} not found", noteId);

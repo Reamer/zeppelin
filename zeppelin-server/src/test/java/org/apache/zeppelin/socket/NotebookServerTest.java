@@ -60,7 +60,7 @@ import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.Paragraph;
-import org.apache.zeppelin.notebook.Notebook.NoteAfterGetCallback;
+import org.apache.zeppelin.notebook.Notebook.NoteProcessor;
 import org.apache.zeppelin.notebook.repo.NotebookRepoWithVersionControl;
 import org.apache.zeppelin.common.Message;
 import org.apache.zeppelin.common.Message.OP;
@@ -131,7 +131,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
     notebookServer.onMessage(sock1, new Message(OP.NEW_NOTE).put("name", noteName).toJson());
     NoteInfo createdNoteInfo = null;
     for (NoteInfo noteInfo : notebook.getNotesInfo()) {
-      if (notebook.readNote(noteInfo.getId(), Note::getName).equals(noteName)) {
+      if (notebook.processNote(noteInfo.getId(), Note::getName).equals(noteName)) {
         createdNoteInfo = noteInfo;
         break;
       }
@@ -141,7 +141,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
     notebookServer.onMessage(sock1, message.toJson());
     notebookServer.onMessage(sock2, message.toJson());
 
-    Paragraph paragraph = notebook.readNote(createdNoteInfo.getId(),
+    Paragraph paragraph = notebook.processNote(createdNoteInfo.getId(),
       createdNote -> {
         return createdNote.getParagraphs().get(0);
       });
@@ -206,7 +206,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
         }
       }
 
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           // start interpreter process
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -216,14 +216,14 @@ public class NotebookServerTest extends AbstractTestRestApi {
           return null;
         });
 
-      Status status = notebook.readNote(note1Id, note1-> note1.getParagraph(0).getStatus());
+      Status status = notebook.processNote(note1Id, note1-> note1.getParagraph(0).getStatus());
       // wait for paragraph finished
       while (true) {
         if (status == Job.Status.FINISHED) {
           break;
         }
         Thread.sleep(100);
-        status = notebook.readNote(note1Id, note1-> note1.getParagraph(0).getStatus());
+        status = notebook.processNote(note1Id, note1-> note1.getParagraph(0).getStatus());
       }
       // sleep for 1 second to make sure job running thread finish to fire event. See ZEPPELIN-3277
       Thread.sleep(1000);
@@ -277,7 +277,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
 
       // get reference to interpreterGroup
       InterpreterGroup interpreterGroup = null;
-      List<InterpreterSetting> settings = notebook.readNote(note1Id, note1-> note1.getBindedInterpreterSettings(new ArrayList<>()));
+      List<InterpreterSetting> settings = notebook.processNote(note1Id, note1-> note1.getBindedInterpreterSettings(new ArrayList<>()));
       for (InterpreterSetting setting : settings) {
         if (setting.getName().equals("angular")) {
           interpreterGroup = setting.getOrCreateInterpreterGroup("anonymous", note1Id);
@@ -285,7 +285,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
         }
       }
 
-      String p1Id = notebook.readNote(note1Id,
+      String p1Id = notebook.processNote(note1Id,
         note1 -> {
           // start interpreter process
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -296,13 +296,13 @@ public class NotebookServerTest extends AbstractTestRestApi {
         });
 
       // wait for paragraph finished
-      Status status = notebook.readNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
+      Status status = notebook.processNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
       while (true) {
         if (status == Job.Status.FINISHED) {
           break;
         }
         Thread.sleep(100);
-        status = notebook.readNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
+        status = notebook.processNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
       }
       // sleep for 1 second to make sure job running thread finish to fire event. See ZEPPELIN-3277
       Thread.sleep(1000);
@@ -325,7 +325,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
                       .put("name", "COMMAND_TYPE")
                       .put("value", "COMMAND_TYPE_VALUE")
                       .put("interpreterGroupId", interpreterGroup.getId()).toJson());
-      List<AngularObject> list = notebook.readNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
+      List<AngularObject> list = notebook.processNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
       assertEquals(1, list.size());
       assertEquals(note1Id, list.get(0).getNoteId());
       assertEquals(p1Id, list.get(0).getParagraphId());
@@ -345,7 +345,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
                       .put("name", "COMMAND_TYPE")
                       .put("value", "COMMAND_TYPE_VALUE_UPDATE")
                       .put("interpreterGroupId", interpreterGroup.getId()).toJson());
-      list = notebook.readNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
+      list = notebook.processNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
       assertEquals(1, list.size());
       assertEquals(note1Id, list.get(0).getNoteId());
       assertEquals(p1Id, list.get(0).getParagraphId());
@@ -365,7 +365,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
                       .put("name", "COMMAND_TYPE")
                       .put("value", "COMMAND_TYPE_VALUE")
                       .put("interpreterGroupId", interpreterGroup.getId()).toJson());
-      list = notebook.readNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
+      list = notebook.processNote(note1Id, note1-> note1.getAngularObjects("angular-shared_process"));
       assertEquals(0, list.size());
       // Check if the interpreterGroup AngularObjectRegistry is delete
       mapRegistry = interpreterGroup.getAngularObjectRegistry().getRegistry();
@@ -394,7 +394,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
           break;
         }
       }
-      String p1Id = notebook.readNote(note1Id,
+      String p1Id = notebook.processNote(note1Id,
         note1 -> {
           // start interpreter process
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -406,21 +406,21 @@ public class NotebookServerTest extends AbstractTestRestApi {
 
 
       // wait for paragraph finished
-      Status status = notebook.readNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
+      Status status = notebook.processNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
       while (true) {
         System.out.println("loop");
         if (status == Job.Status.FINISHED) {
           break;
         }
         Thread.sleep(100);
-        status = notebook.readNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
+        status = notebook.processNote(note1Id, note1-> note1.getParagraph(p1Id).getStatus());
       }
       // sleep for 1 second to make sure job running thread finish to fire event. See ZEPPELIN-3277
       Thread.sleep(1000);
 
       // set note AngularObject
       AngularObject ao = new AngularObject("COMMAND_TYPE", "COMMAND_TYPE_VALUE", note1Id, p1Id, null);
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           note1.addOrUpdateAngularObject("angular-shared_process", ao);
           return null;
@@ -472,7 +472,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
                 "worry ", e);
       }
 
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           assertNotNull(note);
           assertEquals("Test Zeppelin notebook import", note.getName());
@@ -505,7 +505,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
                 "worry ", e);
       }
 
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           assertNotNull(note);
           assertTrue(note.getName(), note.getName().startsWith("Note converted from Jupyter_"));
@@ -541,7 +541,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
       notebookServer.setNotebookService(() -> notebookService);
       final Note note = mock(Note.class, RETURNS_DEEP_STUBS);
 
-      when(notebook.readNote(eq("noteId"), Mockito.any())).then(e -> e.getArgumentAt(1,NoteAfterGetCallback.class).process(note));
+      when(notebook.processNote(eq("noteId"), Mockito.any())).then(e -> e.getArgumentAt(1,NoteProcessor.class).process(note));
       final Paragraph paragraph = mock(Paragraph.class, RETURNS_DEEP_STUBS);
       when(note.getParagraph("paragraphId")).thenReturn(paragraph);
 
@@ -597,7 +597,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
       notebookServer.setNotebook(() -> notebook);
       notebookServer.setNotebookService(() -> notebookService);
       final Note note = mock(Note.class, RETURNS_DEEP_STUBS);
-      when(notebook.readNote(eq("noteId"), Mockito.any())).then(e -> e.getArgumentAt(1,NoteAfterGetCallback.class).process(note));
+      when(notebook.processNote(eq("noteId"), Mockito.any())).then(e -> e.getArgumentAt(1,NoteProcessor.class).process(note));
       final Paragraph paragraph = mock(Paragraph.class, RETURNS_DEEP_STUBS);
       when(note.getParagraph("paragraphId")).thenReturn(paragraph);
 
@@ -669,7 +669,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
     String createdNoteId = null;
     for (NoteInfo noteInfo : notebook.getNotesInfo()) {
       ;
-      if (notebook.readNote(noteInfo.getId(), Note::getName).equals(noteName)) {
+      if (notebook.processNote(noteInfo.getId(), Note::getName).equals(noteName)) {
         createdNoteId = noteInfo.getId();
         break;
       }
@@ -705,7 +705,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
     }
     // update RuntimeInfos
     Map<String, String> infos = new java.util.HashMap<>();
-    String paragraphId = notebook.readNote(noteId,
+    String paragraphId = notebook.processNote(noteId,
       note -> {
         assertNotNull(note);
         assertNotNull(note.getParagraph(0));
@@ -719,7 +719,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
       });
 
     notebookServer.onParaInfosReceived(noteId, paragraphId, "spark", infos);
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         Paragraph paragraph = note.getParagraph(paragraphId);
         // check RuntimeInfos
@@ -740,7 +740,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
 
     try {
       noteId = notebook.createNote("note1", anonymous);
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
           p1.setText("%md start remote interpreter process");
@@ -804,7 +804,7 @@ public class NotebookServerTest extends AbstractTestRestApi {
 
     try {
       noteId = notebook.createNote("note1", anonymous);
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           assertEquals(0, note.getParagraphCount());
           NotebookRepoWithVersionControl.Revision firstRevision = notebook.checkpointNote(note.getId(), note.getPath(), "first commit", AuthenticationInfo.ANONYMOUS);

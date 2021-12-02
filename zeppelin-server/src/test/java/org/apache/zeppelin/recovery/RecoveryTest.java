@@ -83,7 +83,7 @@ public class RecoveryTest extends AbstractTestRestApi {
     String note1Id = null;
     try {
       note1Id = notebook.createNote("note1", anonymous);
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           // run python interpreter and create new variable `user`
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -97,7 +97,7 @@ public class RecoveryTest extends AbstractTestRestApi {
               new TypeToken<Map<String, Object>>() {}.getType());
       assertEquals("OK", resp.get("status"));
       post.close();
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.FINISHED, p1.getStatus());
@@ -111,7 +111,7 @@ public class RecoveryTest extends AbstractTestRestApi {
 
       // run the paragraph again, but change the text to print variable `user`
       Thread.sleep(10 * 1000);
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           p1 = note1.getParagraph(p1.getId());
@@ -121,7 +121,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       post = httpPost("/notebook/job/" + note1Id + "?blocking=true", "");
       assertEquals("OK", resp.get("status"));
       post.close();
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.FINISHED, p1.getStatus());
@@ -146,7 +146,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       note1Id = notebook.createNote("note2", AuthenticationInfo.ANONYMOUS);
 
       // run python interpreter and create new variable `user`
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           p1.setText("%python user='abc'");
@@ -158,7 +158,7 @@ public class RecoveryTest extends AbstractTestRestApi {
               new TypeToken<Map<String, Object>>() {}.getType());
       assertEquals("OK", resp.get("status"));
       post.close();
-      notebook.readNote(note1Id,
+      notebook.processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.FINISHED, p1.getStatus());
@@ -182,7 +182,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       Thread.sleep(5 * 1000);
       // run the paragraph again, but change the text to print variable `user`.
       // can not recover the python interpreter, because it has been shutdown.
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           p1.setText("%python print(user)");
@@ -191,7 +191,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       post = httpPost("/notebook/job/" + note1Id + "?blocking=true", "");
       assertEquals("OK", resp.get("status"));
       post.close();
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.ERROR, p1.getStatus());
@@ -213,7 +213,7 @@ public class RecoveryTest extends AbstractTestRestApi {
     String note1Id = null;
     try {
       note1Id = TestUtils.getInstance(Notebook.class).createNote("note3", AuthenticationInfo.ANONYMOUS);
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           // run python interpreter and create new variable `user`
           Paragraph p1 = note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
@@ -227,7 +227,7 @@ public class RecoveryTest extends AbstractTestRestApi {
               new TypeToken<Map<String, Object>>() {}.getType());
       assertEquals("OK", resp.get("status"));
       post.close();
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.FINISHED, p1.getStatus());
@@ -244,7 +244,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       Thread.sleep(5 * 1000);
       // run the paragraph again, but change the text to print variable `user`.
       // can not recover the python interpreter, because it has been shutdown.
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           p1.setText("%python print(user)");
@@ -254,7 +254,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       post = httpPost("/notebook/job/" + note1Id + "?blocking=true", "");
       assertEquals("OK", resp.get("status"));
       post.close();
-      TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           Paragraph p1 = note1.getParagraph(0);
           assertEquals(Job.Status.ERROR, p1.getStatus());
@@ -276,7 +276,7 @@ public class RecoveryTest extends AbstractTestRestApi {
     String note1Id = null;
     try {
       note1Id = TestUtils.getInstance(Notebook.class).createNote("note4", AuthenticationInfo.ANONYMOUS);
-      Paragraph p1 = TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      Paragraph p1 = TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           return note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
         });
@@ -336,7 +336,7 @@ public class RecoveryTest extends AbstractTestRestApi {
       note1Id = TestUtils.getInstance(Notebook.class).createNote("note4", AuthenticationInfo.ANONYMOUS);
 
       // run  paragraph async, print 'hello' after 10 seconds
-      Paragraph p1 = TestUtils.getInstance(Notebook.class).readNote(note1Id,
+      Paragraph p1 = TestUtils.getInstance(Notebook.class).processNote(note1Id,
         note1 -> {
           return note1.addNewParagraph(AuthenticationInfo.ANONYMOUS);
         });
