@@ -76,7 +76,7 @@ public abstract class ZeppelinFlinkClusterTest extends AbstractTestRestApi {
 
       // run p0 for %flink.conf
       String checkpointPath = Files.createTempDirectory("checkpoint").toAbsolutePath().toString();
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p0 = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           StringBuilder builder = new StringBuilder("%flink.conf\n");
@@ -142,7 +142,7 @@ public abstract class ZeppelinFlinkClusterTest extends AbstractTestRestApi {
 
       // run p0 for %flink.conf
       String checkpointPath = Files.createTempDirectory("checkpoint").toAbsolutePath().toString();
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p0 = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           StringBuilder builder = new StringBuilder("%flink.conf\n");

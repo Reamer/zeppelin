@@ -298,7 +298,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
 
     if (angularObject.getNoteId() != null) {
       try {
-        interpreterSettingManager.getNotebook().readNote(angularObject.getNoteId(),
+        interpreterSettingManager.getNotebook().processNote(angularObject.getNoteId(),
           note -> {
             if (note != null) {
               note.addOrUpdateAngularObject(intpGroupId, angularObject);
@@ -332,7 +332,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
 
     if (angularObject.getNoteId() != null) {
       try {
-        interpreterSettingManager.getNotebook().readNote(angularObject.getNoteId(),
+        interpreterSettingManager.getNotebook().processNote(angularObject.getNoteId(),
             note -> {
               if (note != null) {
                 note.addOrUpdateAngularObject(intpGroupId, angularObject);
@@ -360,7 +360,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
 
     if (noteId != null) {
       try {
-        interpreterSettingManager.getNotebook().readNote(noteId,
+        interpreterSettingManager.getNotebook().processNote(noteId,
           note -> {
             if (note == null) {
               throw new IOException("Fail to get note: " + noteId);
@@ -569,7 +569,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
           throws InterpreterRPCException, TException {
     try {
       LOGGER.info("Update paragraph config");
-      interpreterSettingManager.getNotebook().readNote(noteId,
+      interpreterSettingManager.getNotebook().processNote(noteId,
           note -> {
             note.getParagraph(paragraphId).updateConfig(config);
             interpreterSettingManager.getNotebook().saveNote(note, AuthenticationInfo.ANONYMOUS);

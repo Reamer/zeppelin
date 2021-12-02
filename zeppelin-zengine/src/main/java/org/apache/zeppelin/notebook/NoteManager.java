@@ -18,28 +18,27 @@
 
 package org.apache.zeppelin.notebook;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
-import org.apache.zeppelin.notebook.exception.NotePathAlreadyExistsException;
-import org.apache.zeppelin.notebook.repo.NotebookRepo;
-import org.apache.zeppelin.user.AuthenticationInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Tags;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.notebook.Notebook.NoteProcessor;
+import org.apache.zeppelin.notebook.exception.NotePathAlreadyExistsException;
+import org.apache.zeppelin.notebook.repo.NotebookRepo;
+import org.apache.zeppelin.user.AuthenticationInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tags;
 
 /**
  * Manager class for note. It handle all the note related operations, such as get, create,
@@ -294,31 +293,34 @@ public class NoteManager {
   }
 
   /**
-   * Get note from NotebookRepo.
+   * Process note from NotebookRepo in an eviction aware manner.
    *
    * @param noteId
    * @param reload
-   * @return return null if not found on NotebookRepo.
+   * @param noteProcessor
+   * @return result of the noteProcessor
    * @throws IOException
    */
-  public Note getNote(String noteId, boolean reload) throws IOException {
+  public <T> T processNote(String noteId, boolean reload, NoteProcessor<T> noteProcessor)
+      throws IOException {
     String notePath = this.notesInfo.get(noteId);
     if (notePath == null) {
-      return null;
+      return noteProcessor.process(null);
     }
     NoteNode noteNode = getNoteNode(notePath);
-    return noteNode.getNote(reload);
+    return noteNode.loadAndProcessNote(reload, noteProcessor);
   }
 
   /**
-   * Get note from NotebookRepo.
+   * Process note from NotebookRepo in an eviction aware manner.
    *
    * @param noteId
-   * @return return null if not found on NotebookRepo.
+   * @param noteProcessor
+   * @return result of the noteProcessor
    * @throws IOException
    */
-  public Note getNote(String noteId) throws IOException {
-    return getNote(noteId, false);
+  public <T> T processNote(String noteId, NoteProcessor<T> noteProcessor) throws IOException {
+    return processNote(noteId, false, noteProcessor);
   }
 
   /**
@@ -571,30 +573,48 @@ public class NoteManager {
       this.noteUnloader = noteUnloader;
     }
 
-    public synchronized Note getNote() throws IOException {
-      return getNote(false);
-    }
-
     /**
-     * This method will load note from NotebookRepo. If you just want to get noteId, noteName or
+     * This method will process note in a eviction aware manner by loading it from NotebookRepo. 
+     * 
+     * If you just want to get noteId, noteName or
      * notePath, you can call method getNoteId, getNoteName & getNotePath
      *
      * @param reload force a reload from {@link NotebookRepo}
-     * @return Note
+     * @param noteProcessor callback 
+     * @return result of the noteProcessor
      * @throws IOException
      */
-    public synchronized Note getNote(boolean reload) throws IOException {
-      if (!note.isLoaded() || reload) {
-        note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
-        if (parent.toString().equals("/")) {
-          note.setPath("/" + note.getName());
-        } else {
-          note.setPath(parent.toString() + "/" + note.getName());
+    public synchronized <T> T loadAndProcessNote(boolean reload, NoteProcessor<T> noteProcessor)
+        throws IOException {
+
+      final Lock lock = note.getLock().readLock();
+      try {
+        // aquire lock to avoid eviction of that note
+        lock.lock();
+
+        if (!note.isLoaded() || reload) {
+          // load note
+          final ReentrantReadWriteLock originalLock = note.getLock(); // retain original lock 
+          note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
+          if (parent.toString().equals("/")) {
+            note.setPath("/" + note.getName());
+          } else {
+            note.setPath(parent.toString() + "/" + note.getName());
+          }
+          note.setLock(originalLock);
+          note.setCronSupported(ZeppelinConfiguration.create());
+          note.setLoaded(true);
         }
-        note.setCronSupported(ZeppelinConfiguration.create());
-        note.setLoaded(true);
+
+        // free other notes from memory
+        noteUnloader.handleEviction(note);
+
+        // process note
+        return noteProcessor.process(note);
+
+      } finally {
+        lock.unlock();
       }
-      return noteUnloader.handleEviction(note);
     }
 
     public String getNoteId() {
@@ -651,7 +671,7 @@ public class NoteManager {
   /**
    * Unloads notes when reasonable amount of notes are in loaded state.
    * Leverage a simple LRU cache for determing evictable notes.
-   * Ensures that no notes with a read or write lock will be evicted.
+   * Notes are not evicted in case they are currently in use (and have a lock).
    */
   private static class NoteUnloader {
 
@@ -692,12 +712,13 @@ public class NoteManager {
         }
 
         final Note eldestNote = eldest.getValue();
-        if (eldestNote.getWriteLock().tryLock()) {
+        final Lock lock = eldestNote.getLock().writeLock();
+        if (lock.tryLock()) { // avoid eviction in case the note is in use
           try {
             eldestNote.unLoad();
             return true;
           } finally {
-            eldestNote.getWriteLock().unlock();
+            lock.unlock();
           }
         } else {
           LOGGER.info("Can not evict note {}, because the write lock can not be acquired. {} notes currently loaded.",

@@ -113,7 +113,7 @@ public class Notebook {
       getNotesInfo().forEach(noteInfo -> {
         try {
           List<Paragraph> paragraphsToRecover = new LinkedList<>();
-          readNote(noteInfo.getId(),
+          processNote(noteInfo.getId(),
             note -> {
               for (Paragraph paragraph : note.getParagraphs()) {
                 if (paragraph.getStatus() == Job.Status.RUNNING) {
@@ -262,7 +262,7 @@ public class Notebook {
    */
   public String exportNote(String noteId) throws IOException {
     try {
-      return readNote(noteId,
+      return processNote(noteId,
         note -> {
           if (note == null) {
             throw new IOException("Note " + noteId + " not found");
@@ -289,7 +289,7 @@ public class Notebook {
       notePath = oldNote.getName();
     }
     String newNoteId = createNote(notePath, subject);
-    readNote(newNoteId,
+    processNote(newNoteId,
       newNote -> {
         List<Paragraph> paragraphs = oldNote.getParagraphs();
         for (Paragraph p : paragraphs) {
@@ -311,14 +311,13 @@ public class Notebook {
    */
   public String cloneNote(String sourceNoteId, String newNotePath, AuthenticationInfo subject)
       throws IOException {
-    return readNote(sourceNoteId,
+    return processNote(sourceNoteId,
       sourceNote -> {
         if (sourceNote == null) {
           throw new IOException("Source note: " + sourceNoteId + " not found");
         }
         String newNoteId = createNote(newNotePath, subject, false);
-        // use write lock because several attributes are overwritten
-        writeNote(newNoteId,
+        processNote(newNoteId,
           newNote -> {
             List<Paragraph> paragraphs = sourceNote.getParagraphs();
             for (Paragraph p : paragraphs) {
@@ -357,14 +356,13 @@ public class Notebook {
   }
 
   /**
-   * Removes the Note with the NoteId. This method acquires the write lock so that no other thread can access the note.
+   * Removes the Note with the NoteId.
    * @param noteId
    * @param subject
    * @throws IOException when fail to get it from NotebookRepo
    */
   public void removeNote(String noteId, AuthenticationInfo subject) throws IOException {
-    // use write lock, because we remove the note
-    writeNote(noteId,
+    processNote(noteId,
       note -> {
         if (note != null) {
           removeNote(note, subject);
@@ -374,87 +372,47 @@ public class Notebook {
   }
 
   /**
-   * Get note from NotebookRepo and also initialize it with other properties that is not
-   * persistent in NotebookRepo, such as paragraphJobListener.
-   * @param noteId
-   * @return null if note not found.
-   * @throws IOException when fail to get it from NotebookRepo.
-   */
-  public <T> T readNote(String noteId, NoteAfterGetCallback<T> afterGet) throws IOException {
-    return readNote(noteId, false, afterGet);
-  }
-
-  public <T> T readNote(String noteId, boolean reload, NoteAfterGetCallback<T> afterGet) throws IOException {
-    Note note = noteManager.getNote(noteId, reload);
-    if (note == null) {
-      return afterGet.process(note);
-    } else {
-      note.getReadLock().lock();
-      try {
-        note.setInterpreterFactory(replFactory);
-        note.setInterpreterSettingManager(interpreterSettingManager);
-        note.setParagraphJobListener(paragraphJobListener);
-        note.setNoteEventListeners(noteEventListeners);
-        note.setCredentials(credentials);
-        for (Paragraph p : note.getParagraphs()) {
-          p.setNote(note);
-        }
-        return afterGet.process(note);
-      } finally {
-        note.getReadLock().unlock();
-      }
-    }
-  }
-
-  /**
-   * Get note from NotebookRepo and also initialize it with other properties that is not
-   * persistent in NotebookRepo, such as paragraphJobListener.
+   * Process a note in an eviction aware manner. It initializes the note 
+   * with other properties that is not persistent in NotebookRepo, such as paragraphJobListener.
    * <p>
-   * This method acquires a write lock to change note properties.
-   * </p>
-   * <p>
-   * Use {@link #writeNote(String, boolean, NoteAfterGetCallback)} in case you want to force a note reload from the {@link #NotebookRepo}.
-   * </p>
-   * <p>
-   * Only use this method case you want to overwrite a note attribute reference (e.g. {@link Note#setConfig(Map)}, {@link Note#setNoteParams}, {@link Note#setName}, {@link Note#setDefaultInterpreterGroup}),
-   * otherwise use the read lock via {@link #readNote(String, boolean, NoteAfterGetCallback)}. The Note attribute should handle concurrency.
+   * Use {@link #processNote(String, boolean, NoteProcessor)} in case you want to force 
+   * a note reload from the {@link #NotebookRepo}.
    * </p>
    * @param noteId
+   * @param noteProcessor
+   * @return result of the noteProcessor
    * @throws IOException when fail to get it from {@link NotebookRepo}
    */
-  public <T> T writeNote(String noteId, NoteAfterGetCallback<T> afterGet) throws IOException {
-    return writeNote(noteId, false, afterGet);
+  public <T> T processNote(String noteId, NoteProcessor<T> noteProcessor) throws IOException {
+    return processNote(noteId, false, noteProcessor);
   }
 
   /**
-   * Get note from NotebookRepo and also initialize it with other properties that is not
-   * persistent in NotebookRepo, such as paragraphJobListener.
-   * This method acquires a write lock to change note properties.
-   *
+   * Process a note in an eviction aware manner. It initializes the note 
+   * with other properties that is not persistent in NotebookRepo, such as paragraphJobListener.
+   * 
    * @param noteId
-   * @param reload forces a reload of the note from the {@link NotebookRepo}
-   * @throws IOException when fail to get it from {@link NotebookRepo}.
+   * @param reload
+   * @param noteProcessor
+   * @return result of the noteProcessor
+   * @throws IOException when fail to get it from {@link NotebookRepo}
    */
-  public <T> T writeNote(String noteId, boolean reload, NoteAfterGetCallback<T> afterGet) throws IOException {
-    Note note = noteManager.getNote(noteId, reload);
-    if (note == null) {
-      return afterGet.process(note);
-    } else {
-      note.getWriteLock().lock();
-      try {
-        note.setInterpreterFactory(replFactory);
-        note.setInterpreterSettingManager(interpreterSettingManager);
-        note.setParagraphJobListener(paragraphJobListener);
-        note.setNoteEventListeners(noteEventListeners);
-        note.setCredentials(credentials);
-        for (Paragraph p : note.getParagraphs()) {
-          p.setNote(note);
-        }
-        return afterGet.process(note);
-      } finally {
-        note.getWriteLock().unlock();
+  public <T> T processNote(String noteId, boolean reload, NoteProcessor<T> noteProcessor) throws IOException {
+    return noteManager.processNote(noteId, reload, note -> {
+      if (note == null) {
+        return noteProcessor.process(note);
       }
-    }
+      note.setInterpreterFactory(replFactory);
+      note.setInterpreterSettingManager(interpreterSettingManager);
+      note.setParagraphJobListener(paragraphJobListener);
+      note.setNoteEventListeners(noteEventListeners);
+      note.setCredentials(credentials);
+      for (final Paragraph p : note.getParagraphs()) {
+        p.setNote(note);
+      }
+      return noteProcessor.process(note);
+    });
+
   }
 
   public void saveNote(Note note, AuthenticationInfo subject) throws IOException {
@@ -581,7 +539,8 @@ public class Notebook {
   public Note loadNoteFromRepo(String id, AuthenticationInfo subject) {
     Note note = null;
     try {
-      note = noteManager.getNote(id);
+      // note can be safely returned here, because it's just broadcasted in json later on
+      note = processNote(id, n -> n);
     } catch (IOException e) {
       LOGGER.error("Fail to get note: {}", id, e);
       return null;
@@ -734,7 +693,7 @@ public class Notebook {
 
   public List<InterpreterSetting> getBindedInterpreterSettings(String noteId) throws IOException {
     List<InterpreterSetting> interpreterSettings = new ArrayList<>();
-    readNote(noteId,
+    processNote(noteId,
       note -> {
         if (note != null) {
           Set<InterpreterSetting> settings = new HashSet<>();
@@ -809,15 +768,15 @@ public class Notebook {
   }
 
   /**
-   * Functional interface for callbacks before notebook save operation.
+   * Functional Interface for note processing.
    */
   @FunctionalInterface
-  public static interface NoteAfterGetCallback<T> {
+  public static interface NoteProcessor<T> {
 
     /**
-     * Note processing after get.
+     * Process a note.
      *
-     * @param note
+     * @param note the current note, or null in case note does not exist.
      * @throws IOException
      */
     T process(Note note) throws IOException;

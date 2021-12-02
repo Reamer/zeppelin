@@ -52,7 +52,7 @@ public class CronJobListener implements JobListener {
     Notebook notebook = (Notebook) jobDataMap.get("notebook");
     String noteName = "unknown";
     try {
-      noteName = notebook.readNote(noteId,
+      noteName = notebook.processNote(noteId,
         note -> {
           if (note == null) {
             LOGGER.warn("Failed to get note: {}", noteId);

@@ -43,7 +43,7 @@ public class CronJob implements org.quartz.Job {
     Notebook notebook = (Notebook) jobDataMap.get("notebook");
 
     try {
-      notebook.readNote(noteId, note -> {
+      notebook.processNote(noteId, note -> {
         if (note == null) {
           LOGGER.warn("Failed to run CronJob of note: {} because there's no such note", noteId);
           context.setResult(RESULT_FAILED);

@@ -293,7 +293,7 @@ public class ClusterEventTest extends ZeppelinServerMock {
     try {
       String oldName = "old_name";
       noteId = TestUtils.getInstance(Notebook.class).createNote(oldName, anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertEquals(note.getName(), oldName);
           return null;
@@ -306,7 +306,7 @@ public class ClusterEventTest extends ZeppelinServerMock {
       assertThat("test testRenameNote:", put, AbstractTestRestApi.isAllowed());
       put.close();
 
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           assertEquals(note.getName(), newName);
           return null;
@@ -373,7 +373,7 @@ public class ClusterEventTest extends ZeppelinServerMock {
     try {
       // Create note and set result explicitly
       noteId = TestUtils.getInstance(Notebook.class).createNote("note1", anonymous);
-      TestUtils.getInstance(Notebook.class).readNote(noteId,
+      TestUtils.getInstance(Notebook.class).processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(AuthenticationInfo.ANONYMOUS);
           InterpreterResult result = new InterpreterResult(InterpreterResult.Code.SUCCESS,
@@ -409,7 +409,7 @@ public class ClusterEventTest extends ZeppelinServerMock {
 
     try {
       noteId = notebook.createNote("note1", anonymous);
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           Paragraph p1 = note.addNewParagraph(anonymous);
           p1.setText("%md start remote interpreter process");

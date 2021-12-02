@@ -1206,7 +1206,7 @@ public class InterpreterSetting {
 
   private ExecutionContext getExecutionContext(String user, String noteId) {
     try {
-      return getInterpreterSettingManager().getNotebook().readNote(noteId,
+      return getInterpreterSettingManager().getNotebook().processNote(noteId,
         note -> {
           if (note == null) {
             throw new RuntimeException("No such note: " + noteId);

@@ -88,7 +88,7 @@ public class ZSessionIntegrationTest extends AbstractTestRestApi {
       assertNull(session.getWeburl());
       assertNotNull(session.getNoteId());
 
-      notebook.readNote(session.getNoteId(),
+      notebook.processNote(session.getNoteId(),
         note -> {
           assertEquals(2, note.getParagraphCount());
           assertTrue(note.getParagraph(0).getText(), note.getParagraph(0).getText().startsWith("%sh.conf"));
@@ -109,7 +109,7 @@ public class ZSessionIntegrationTest extends AbstractTestRestApi {
       assertEquals("TEXT", result.getResults().get(1).getType());
       assertTrue(result.getResults().get(1).getData(), result.getResults().get(1).getData().contains("ExitValue"));
 
-      notebook.readNote(session.getNoteId(),
+      notebook.processNote(session.getNoteId(),
         note -> {
           assertEquals(4, note.getParagraphCount());
           assertEquals("%sh invalid_command", note.getParagraph(3).getText());
@@ -132,7 +132,7 @@ public class ZSessionIntegrationTest extends AbstractTestRestApi {
       assertNull(session.getWeburl());
       assertNotNull(session.getNoteId());
 
-      notebook.readNote(session.getNoteId(),
+      notebook.processNote(session.getNoteId(),
         note -> {
           assertEquals(2, note.getParagraphCount());
           assertTrue(note.getParagraph(0).getText(), note.getParagraph(0).getText().startsWith("%sh.conf"));
@@ -155,7 +155,7 @@ public class ZSessionIntegrationTest extends AbstractTestRestApi {
       assertEquals("TEXT", result.getResults().get(1).getType());
       assertTrue(result.getResults().get(1).getData(), result.getResults().get(1).getData().contains("ExitValue"));
 
-      notebook.readNote(session.getNoteId(),
+      notebook.processNote(session.getNoteId(),
         note -> {
           assertEquals(4, note.getParagraphCount());
           assertEquals("%sh invalid_command", note.getParagraph(3).getText());

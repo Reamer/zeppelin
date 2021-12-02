@@ -544,7 +544,7 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
 
   public InterpreterSetting getDefaultInterpreterSetting(String noteId) {
     try {
-      InterpreterSetting interpreterSetting = notebook.readNote(noteId,
+      InterpreterSetting interpreterSetting = notebook.processNote(noteId,
         note -> {
           return interpreterSettings.get(note.getDefaultInterpreterGroup());
         });
@@ -959,7 +959,7 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
   // restart in note page
   public void restart(String settingId, String user, String noteId) throws InterpreterException {
     try {
-      ExecutionContext executionContext = notebook.readNote(noteId,
+      ExecutionContext executionContext = notebook.processNote(noteId,
         note -> {
           if (note == null) {
             throw new IOException("No such note: " + noteId);

@@ -1220,12 +1220,12 @@ public class Note implements JsonSerializable {
     this.noteEventListeners = noteEventListeners;
   }
 
-  public ReadLock getReadLock() {
-    return lock.readLock();
+  public ReentrantReadWriteLock getLock() {
+    return lock;
   }
 
-  public WriteLock getWriteLock() {
-    return lock.writeLock();
+  public void setLock(ReentrantReadWriteLock lock) {
+    this.lock = lock;
   }
 
   public void setRemoved(boolean removed) {

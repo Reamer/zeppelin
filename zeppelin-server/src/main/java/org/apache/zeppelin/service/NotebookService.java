@@ -50,7 +50,7 @@ import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.NoteManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.Paragraph;
-import org.apache.zeppelin.notebook.Notebook.NoteAfterGetCallback;
+import org.apache.zeppelin.notebook.Notebook.NoteProcessor;
 import org.apache.zeppelin.notebook.AuthorizationService;
 import org.apache.zeppelin.notebook.exception.CorruptedNoteException;
 import org.apache.zeppelin.notebook.exception.NotePathAlreadyExistsException;
@@ -106,7 +106,7 @@ public class NotebookService {
     if (noteId != null) {
       callback.onSuccess(null, context);
     } else {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note != null && !checkPermission(noteId, Permission.READER, Message.OP.GET_HOME_NOTE, context,
             callback)) {
@@ -122,16 +122,16 @@ public class NotebookService {
   public  <T> T getNote(String noteId,
                       ServiceContext context,
                       ServiceCallback<Note> callback,
-                      NoteAfterGetCallback<T> afterGet) throws IOException {
-    return getNote(noteId, false, context, callback, afterGet);
+                      NoteProcessor<T> noteProcessor) throws IOException {
+    return getNote(noteId, false, context, callback, noteProcessor);
   }
 
   public <T> T getNote(String noteId,
                       boolean reload,
                       ServiceContext context,
                       ServiceCallback<Note> callback,
-                      NoteAfterGetCallback<T> afterGet) throws IOException {
-    return notebook.readNote(noteId, reload,
+                      NoteProcessor<T> noteProcessor) throws IOException {
+    return notebook.processNote(noteId, reload,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -146,10 +146,10 @@ public class NotebookService {
           newNote = note.getUserNote(context.getAutheInfo().getUser());
         }
         callback.onSuccess(newNote, context);
-        if (afterGet == null) {
+        if (noteProcessor == null) {
           return null;
         }
-        return afterGet.process(newNote);
+        return noteProcessor.process(newNote);
       });
   }
 
@@ -178,7 +178,7 @@ public class NotebookService {
       String noteId = notebook.createNote(normalizeNotePath(notePath), defaultInterpreterGroup,
           context.getAutheInfo(), false);
       // it's an empty note. so add one paragraph
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (addingEmptyParagraph) {
             note.addNewParagraph(context.getAutheInfo());
@@ -266,7 +266,7 @@ public class NotebookService {
     if (!checkPermission(noteId, Permission.OWNER, Message.OP.NOTE_RENAME, context, callback)) {
       return;
     }
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       readNote -> {
         if (readNote == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -302,7 +302,7 @@ public class NotebookService {
     try {
       String newNoteId = notebook.cloneNote(noteId, normalizeNotePath(newNotePath),
           context.getAutheInfo());
-      return notebook.readNote(newNoteId,
+      return notebook.processNote(newNoteId,
         newNote -> {
           callback.onSuccess(newNote, context);
           return newNote.getId();
@@ -331,7 +331,7 @@ public class NotebookService {
       String noteId = notebook.importNote(noteJson, notePath == null ?
               notePath : normalizeNotePath(notePath),
           context.getAutheInfo());
-      return notebook.readNote(noteId,
+      return notebook.processNote(noteId,
         note -> {
           callback.onSuccess(note, context);
           return note.getId();
@@ -450,7 +450,7 @@ public class NotebookService {
       return false;
     }
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -519,7 +519,7 @@ public class NotebookService {
       return;
     }
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           throw new NoteNotFoundException(noteId);
@@ -544,7 +544,7 @@ public class NotebookService {
         callback)) {
       return;
     }
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           throw new NoteNotFoundException(noteId);
@@ -573,7 +573,7 @@ public class NotebookService {
       return;
     }
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
         note -> {
           if (note == null) {
             throw new NoteNotFoundException(noteId);
@@ -599,7 +599,7 @@ public class NotebookService {
       return null;
     }
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
         note -> {
           if (note == null) {
             throw new NoteNotFoundException(noteId);
@@ -619,7 +619,7 @@ public class NotebookService {
         callback)) {
       return;
     }
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -689,7 +689,7 @@ public class NotebookService {
       return;
     }
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -734,7 +734,7 @@ public class NotebookService {
             callback)) {
       throw new IOException("No privilege to access this note");
     }
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -767,7 +767,7 @@ public class NotebookService {
         callback)) {
       return;
     }
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -800,7 +800,7 @@ public class NotebookService {
     }
 
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -824,7 +824,7 @@ public class NotebookService {
       return;
     }
     // use write lock because config and name are overwritten
-    notebook.writeNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -871,7 +871,7 @@ public class NotebookService {
       return;
     }
     // use write lock because noteParams are overwritten
-    notebook.writeNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -889,7 +889,7 @@ public class NotebookService {
                               String formName,
                               ServiceContext context,
                               ServiceCallback<Note> callback) throws IOException {
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -915,7 +915,7 @@ public class NotebookService {
       ServiceContext context,
       ServiceCallback<NotebookRepoWithVersionControl.Revision> callback) throws IOException {
 
-    NotebookRepoWithVersionControl.Revision revision = notebook.readNote(noteId,
+    NotebookRepoWithVersionControl.Revision revision = notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -938,7 +938,7 @@ public class NotebookService {
       ServiceCallback<List<NotebookRepoWithVersionControl.Revision>> callback) throws IOException {
 
 
-    List<NotebookRepoWithVersionControl.Revision> revisions = notebook.readNote(noteId,
+    List<NotebookRepoWithVersionControl.Revision> revisions = notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -963,7 +963,7 @@ public class NotebookService {
                               ServiceContext context,
                               ServiceCallback<Note> callback) throws IOException {
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -992,7 +992,7 @@ public class NotebookService {
                                 ServiceContext context,
                                 ServiceCallback<Note> callback) throws IOException {
 
-    notebook.readNote(noteId ,
+    notebook.processNote(noteId ,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1015,7 +1015,7 @@ public class NotebookService {
                                           ServiceContext context,
                                           ServiceCallback<Note> callback) throws IOException {
 
-    notebook.readNote(noteId ,
+    notebook.processNote(noteId ,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1046,7 +1046,7 @@ public class NotebookService {
       ServiceContext context,
       ServiceCallback<List<InterpreterCompletion>> callback) throws IOException {
 
-    return notebook.readNote(noteId,
+    return notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1075,7 +1075,7 @@ public class NotebookService {
                                String paragraphText,
                                ServiceContext context,
                                ServiceCallback<Map<String, Object>> callback) throws IOException {
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1096,7 +1096,7 @@ public class NotebookService {
                                      ServiceContext context,
                                      ServiceCallback<Note> callback) throws IOException {
 
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         if (note == null) {
           callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1130,7 +1130,7 @@ public class NotebookService {
     final String finalDestNotePath = destNotePath;
 
     try {
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note == null) {
             callback.onFailure(new NoteNotFoundException(noteId), context);
@@ -1231,7 +1231,7 @@ public class NotebookService {
       Job.Status status = Job.Status.valueOf((String) message.get("status"));
       Map<String, Object> params = (Map<String, Object>) message.get("params");
       Map<String, Object> config = (Map<String, Object>) message.get("config");
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           Paragraph p = setParagraphUsingMessage(note, message, paragraphId,
             text, title, params, config);
@@ -1311,7 +1311,7 @@ public class NotebookService {
     AngularObject ao = null;
     boolean global = false;
     // propagate change to (Remote) AngularObjectRegistry
-    List<InterpreterSetting> settings = notebook.readNote(noteId,
+    List<InterpreterSetting> settings = notebook.processNote(noteId,
       note -> {
         if (note == null) {
           return Collections.emptyList();
@@ -1370,7 +1370,7 @@ public class NotebookService {
       }
 
 
-      notebook.readNote(noteId,
+      notebook.processNote(noteId,
         note -> {
           if (note == null) {
             return null;

@@ -98,7 +98,7 @@ public class LuceneSearchTest {
     // then
     assertThat(results).isNotEmpty();
     assertThat(results.size()).isEqualTo(1);
-    notebook.readNote(note2Id,
+    notebook.processNote(note2Id,
       note2 -> {
         assertThat(results.get(0))
         .containsEntry("id", formatId(note2Id, note2.getLastParagraph()));
@@ -153,7 +153,7 @@ public class LuceneSearchTest {
     // when
     String id = resultForQuery("test").get(0).get("id"); // LuceneSearch.ID_FIELD
     // then
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         assertThat(id.split("/")).asList() // key structure <noteId>/paragraph/<paragraphId>
         .containsAllOf(
@@ -182,7 +182,7 @@ public class LuceneSearchTest {
     drainSearchEvents();
 
     // when
-    notebook.readNote(note2Id,
+    notebook.processNote(note2Id,
       note2 -> {
         Paragraph p2 = note2.getLastParagraph();
         p2.setText("test indeed");
@@ -238,7 +238,7 @@ public class LuceneSearchTest {
     assertThat(resultForQuery("test").size()).isEqualTo(3);
 
     // when
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 ->  {
         Paragraph p1 = note1.getLastParagraph();
         p1.setText("no no no");
@@ -271,7 +271,7 @@ public class LuceneSearchTest {
 
     // when
     // use write lock, because name is overwritten
-    notebook.writeNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         note1.setName("NotebookN");
         notebook.updateNote(note1, AuthenticationInfo.ANONYMOUS);
@@ -298,7 +298,7 @@ public class LuceneSearchTest {
    */
   private String newNoteWithParagraph(String noteName, String parText) throws IOException {
     String note1Id = newNote(noteName);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         addParagraphWithText(note1, parText);
         return null;
@@ -308,7 +308,7 @@ public class LuceneSearchTest {
 
   private String newNoteWithParagraph(String noteName, String parText, String title) throws IOException {
     String noteId = newNote(noteName);
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         addParagraphWithTextAndTitle(note, parText, title);
         return null;
@@ -319,7 +319,7 @@ public class LuceneSearchTest {
   /** Creates a new Note \w given name, adds N paragraphs \w given texts */
   private String newNoteWithParagraphs(String noteName, String... parTexts) throws IOException {
     String note1Id = newNote(noteName);
-    notebook.readNote(note1Id,
+    notebook.processNote(note1Id,
       note1 -> {
         for (String parText : parTexts) {
           addParagraphWithText(note1, parText);

@@ -109,7 +109,7 @@ public class ZeppelinClientIntegrationTest extends AbstractTestRestApi {
   @Test
   public void testNoteOperation() throws Exception {
     String noteId = zeppelinClient.createNote("/project_1/note1");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note -> {
         assertNotNull(note);
         return null;
@@ -152,20 +152,20 @@ public class ZeppelinClientIntegrationTest extends AbstractTestRestApi {
   @Test
   public void testCloneNote() throws Exception {
     String noteId = zeppelinClient.createNote("/clone_note_test/note1");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note1 -> {
         assertNotNull(note1);
         return null;
       });
     zeppelinClient.addParagraph(noteId, "title_1", "text_1");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note1 -> {
         assertEquals(1, note1.getParagraphCount());
         return null;
       });
 
     String clonedNoteId = zeppelinClient.cloneNote(noteId, "/clone_note_test/cloned_note1");
-    notebook.readNote(clonedNoteId,
+    notebook.processNote(clonedNoteId,
       clonedNote -> {
         assertEquals(1, clonedNote.getParagraphCount());
         assertEquals("title_1", clonedNote.getParagraph(0).getTitle());
@@ -177,21 +177,21 @@ public class ZeppelinClientIntegrationTest extends AbstractTestRestApi {
   @Test
   public void testRenameNote() throws Exception {
     String noteId = zeppelinClient.createNote("/rename_note_test/note1");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note1 -> {
         assertNotNull(note1);
         return null;
       });
 
     zeppelinClient.addParagraph(noteId, "title_1", "text_1");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       note1 -> {
         assertEquals(1, note1.getParagraphCount());
         return null;
       });
 
     zeppelinClient.renameNote(noteId, "/rename_note_test/note1_renamed");
-    notebook.readNote(noteId,
+    notebook.processNote(noteId,
       renamedNote -> {
         assertEquals("/rename_note_test/note1_renamed", renamedNote.getPath());
         assertEquals(1, renamedNote.getParagraphCount());
