@@ -153,7 +153,12 @@ public class Note implements JsonSerializable {
 
   /********************************** transient fields ******************************************/
   private transient boolean loaded = false;
-  private transient ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+  /*
+   * Do not use the fair algorithm, because it blocks read accesses when a write access is waiting.
+   * We have read accesses from different threads, which are dependent on each other.
+   * The fair behavior can therefore create a DeadLock.
+   */
+  private transient ReentrantReadWriteLock lock = new ReentrantReadWriteLock(false);
   private transient boolean removed = false;
   private transient InterpreterFactory interpreterFactory;
   private transient InterpreterSettingManager interpreterSettingManager;
