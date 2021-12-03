@@ -584,7 +584,7 @@ public class NoteManager {
      * @return result of the noteProcessor
      * @throws IOException
      */
-    public synchronized <T> T loadAndProcessNote(boolean reload, NoteProcessor<T> noteProcessor)
+    public <T> T loadAndProcessNote(boolean reload, NoteProcessor<T> noteProcessor)
         throws IOException {
 
       final Lock lock = note.getLock().readLock();
@@ -592,18 +592,20 @@ public class NoteManager {
         // aquire lock to avoid eviction of that note
         lock.lock();
 
-        if (!note.isLoaded() || reload) {
-          // load note
-          final ReentrantReadWriteLock originalLock = note.getLock(); // retain original lock 
-          note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
-          if (parent.toString().equals("/")) {
-            note.setPath("/" + note.getName());
-          } else {
-            note.setPath(parent.toString() + "/" + note.getName());
+        // load note
+        synchronized (this) {
+          if (!note.isLoaded() || reload) {
+            final ReentrantReadWriteLock originalLock = note.getLock(); // retain original lock 
+            note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
+            if (parent.toString().equals("/")) {
+              note.setPath("/" + note.getName());
+            } else {
+              note.setPath(parent.toString() + "/" + note.getName());
+            }
+            note.setLock(originalLock);
+            note.setCronSupported(ZeppelinConfiguration.create());
+            note.setLoaded(true);
           }
-          note.setLock(originalLock);
-          note.setCronSupported(ZeppelinConfiguration.create());
-          note.setLoaded(true);
         }
 
         // free other notes from memory
