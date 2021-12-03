@@ -127,7 +127,7 @@ public class NoteManagerTest {
     // add notes with read flag
     for (int i = 0; i < cacheThreshold; ++i) {
       Note note = createNote("/prod/noteDirty" + i);
-      note.getReadLock().lock();
+      note.getLock().readLock();
       noteManager.addNote(note, AuthenticationInfo.ANONYMOUS);
     }
     assertEquals(cacheThreshold, noteManager.getCacheSize());
