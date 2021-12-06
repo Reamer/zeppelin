@@ -372,10 +372,10 @@ public class Notebook {
   }
 
   /**
-   * Process a note in an eviction aware manner. It initializes the note 
+   * Process a note in an eviction aware manner. It initializes the note
    * with other properties that is not persistent in NotebookRepo, such as paragraphJobListener.
    * <p>
-   * Use {@link #processNote(String, boolean, NoteProcessor)} in case you want to force 
+   * Use {@link #processNote(String, boolean, NoteProcessor)} in case you want to force
    * a note reload from the {@link #NotebookRepo}.
    * </p>
    * @param noteId
@@ -388,9 +388,9 @@ public class Notebook {
   }
 
   /**
-   * Process a note in an eviction aware manner. It initializes the note 
+   * Process a note in an eviction aware manner. It initializes the note
    * with other properties that is not persistent in NotebookRepo, such as paragraphJobListener.
-   * 
+   *
    * @param noteId
    * @param reload
    * @param noteProcessor
@@ -464,9 +464,9 @@ public class Notebook {
   public void removeFolder(String folderPath, AuthenticationInfo subject) throws IOException {
     LOGGER.info("Remove folder {}", folderPath);
     // TODO(zjffdu) NotebookRepo.remove is called twice here
-    List<Note> notes = noteManager.removeFolder(folderPath, subject);
-    for (Note note : notes) {
-      fireNoteRemoveEvent(note, subject);
+    List<NoteInfo> noteInfos = noteManager.removeFolder(folderPath, subject);
+    for (NoteInfo noteInfo : noteInfos) {
+      removeNote(noteInfo.getId(), subject);
     }
   }
 

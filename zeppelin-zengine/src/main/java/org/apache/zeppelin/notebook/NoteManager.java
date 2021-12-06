@@ -20,12 +20,12 @@ package org.apache.zeppelin.notebook;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -60,15 +60,15 @@ public class NoteManager {
   private Folder trash;
 
   private NotebookRepo notebookRepo;
-  private NoteUnloader noteUnloader;
+  private NoteCache noteCache;
   // noteId -> notePath
   private Map<String, String> notesInfo;
 
   @Inject
   public NoteManager(NotebookRepo notebookRepo, ZeppelinConfiguration conf) throws IOException {
     this.notebookRepo = notebookRepo;
-    this.noteUnloader = new NoteUnloader(conf.getNoteCacheThreshold());
-    this.root = new Folder("/", notebookRepo, noteUnloader);
+    this.noteCache = new NoteCache(conf.getNoteCacheThreshold());
+    this.root = new Folder("/", notebookRepo, noteCache);
     this.trash = this.root.getOrCreateFolder(TRASH_FOLDER);
     init();
   }
@@ -82,7 +82,7 @@ public class NoteManager {
         .forEach(entry ->
         {
           try {
-            addOrUpdateNoteNode(new Note(new NoteInfo(entry.getKey(), entry.getValue())));
+            addOrUpdateNoteNode(new NoteInfo(entry.getKey(), entry.getValue()));
           } catch (IOException e) {
             LOGGER.warn(e.getMessage());
           }
@@ -99,7 +99,7 @@ public class NoteManager {
    * @throws IOException
    */
   public void reloadNotes() throws IOException {
-    this.root = new Folder("/", notebookRepo, noteUnloader);
+    this.root = new Folder("/", notebookRepo, noteCache);
     this.trash = this.root.getOrCreateFolder(TRASH_FOLDER);
     init();
   }
@@ -109,11 +109,11 @@ public class NoteManager {
    * @return current cache size
    */
   public int getCacheSize() {
-    return this.noteUnloader.getSize();
+    return this.noteCache.getSize();
   }
 
-  private void addOrUpdateNoteNode(Note note, boolean checkDuplicates) throws IOException {
-    String notePath = note.getPath();
+  private void addOrUpdateNoteNode(NoteInfo noteInfo, boolean checkDuplicates) throws IOException {
+    String notePath = noteInfo.getPath();
 
     if (checkDuplicates && !isNotePathAvailable(notePath)) {
       throw new NotePathAlreadyExistsException("Note '" + notePath + "' existed");
@@ -127,13 +127,12 @@ public class NoteManager {
       }
     }
 
-    curFolder.addNote(tokens[tokens.length -1], note);
-    this.notesInfo.put(note.getId(), note.getPath());
-    this.noteUnloader.handleEviction(note);
+    curFolder.addNote(tokens[tokens.length -1], noteInfo);
+    this.notesInfo.put(noteInfo.getId(), noteInfo.getPath());
   }
 
-  private void addOrUpdateNoteNode(Note note) throws IOException {
-    addOrUpdateNoteNode(note, false);
+  private void addOrUpdateNoteNode(NoteInfo noteInfo) throws IOException {
+    addOrUpdateNoteNode(noteInfo, false);
   }
 
   /**
@@ -177,17 +176,16 @@ public class NoteManager {
   public void saveNote(Note note, AuthenticationInfo subject) throws IOException {
     if (note.isRemoved()) {
       LOGGER.warn("Try to save note: {} when it is removed", note.getId());
-    } else if (note.isLoaded()) {
-      addOrUpdateNoteNode(note);
-      this.notebookRepo.save(note, subject);
     } else {
-      LOGGER.warn("Try to save note: {} when it is unloaded", note.getId());
+      addOrUpdateNoteNode(new NoteInfo(note));
+      noteCache.putNote(note);
+      this.notebookRepo.save(note, subject);
     }
   }
 
   public void addNote(Note note, AuthenticationInfo subject) throws IOException {
-    addOrUpdateNoteNode(note, true);
-    note.setLoaded(true);
+    addOrUpdateNoteNode(new NoteInfo(note), true);
+    noteCache.putNote(note);
   }
 
   /**
@@ -211,6 +209,9 @@ public class NoteManager {
     String notePath = this.notesInfo.remove(noteId);
     Folder folder = getOrCreateFolder(getFolderName(notePath));
     folder.removeNote(getNoteName(notePath));
+    synchronized (noteCache) {
+      noteCache.removeNote(noteId);
+    }
     this.notebookRepo.remove(noteId, notePath, subject);
   }
 
@@ -240,11 +241,24 @@ public class NoteManager {
     // update notebookrepo
     this.notebookRepo.move(noteId, notePath, newNotePath, subject);
 
+    // Update path of the note
+    if (!StringUtils.equalsIgnoreCase(notePath, newNotePath)) {
+      processNote(noteId,
+        note -> {
+          note.setPath(newNotePath);
+          return null;
+        });
+    }
+
     // save note if note name is changed, because we need to update the note field in note json.
     String oldNoteName = getNoteName(notePath);
     String newNoteName = getNoteName(newNotePath);
     if (!StringUtils.equalsIgnoreCase(oldNoteName, newNoteName)) {
-      this.notebookRepo.save(noteNode.note, subject);
+      processNote(noteId,
+        note -> {
+          this.notebookRepo.save(note, subject);
+          return null;
+        });
     }
   }
 
@@ -262,8 +276,8 @@ public class NoteManager {
     newFolder.getParent().addFolder(newFolder.getName(), folder);
 
     // update notesInfo
-    for (Note note : folder.getRawNotesRecursively()) {
-      notesInfo.put(note.getId(), note.getPath());
+    for (NoteInfo noteInfo : folder.getNoteInfoRecursively()) {
+      notesInfo.put(noteInfo.getId(), noteInfo.getPath());
     }
   }
 
@@ -275,21 +289,21 @@ public class NoteManager {
    * @return
    * @throws IOException
    */
-  public List<Note> removeFolder(String folderPath, AuthenticationInfo subject) throws IOException {
+  public List<NoteInfo> removeFolder(String folderPath, AuthenticationInfo subject) throws IOException {
 
     // update notebookrepo
     this.notebookRepo.remove(folderPath, subject);
 
     // update filesystem tree
     Folder folder = getFolder(folderPath);
-    List<Note> notes = folder.getParent().removeFolder(folder.getName(), subject);
+    List<NoteInfo> noteInfos = folder.getParent().removeFolder(folder.getName(), subject);
 
     // update notesInfo
-    for (Note note : notes) {
-      this.notesInfo.remove(note.getId());
+    for (NoteInfo noteInfo : noteInfos) {
+      this.notesInfo.remove(noteInfo.getId());
     }
 
-    return notes;
+    return noteInfos;
   }
 
   /**
@@ -411,20 +425,20 @@ public class NoteManager {
     private String name;
     private Folder parent;
     private NotebookRepo notebookRepo;
-    private NoteUnloader noteUnloader;
+    private NoteCache noteUnloader;
 
     // noteName -> NoteNode
     private Map<String, NoteNode> notes = new HashMap<>();
     // folderName -> Folder
     private Map<String, Folder> subFolders = new HashMap<>();
 
-    public Folder(String name, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
+    public Folder(String name, NotebookRepo notebookRepo, NoteCache noteUnloader) {
       this.name = name;
       this.notebookRepo = notebookRepo;
       this.noteUnloader = noteUnloader;
     }
 
-    public Folder(String name, Folder parent, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
+    public Folder(String name, Folder parent, NotebookRepo notebookRepo, NoteCache noteUnloader) {
       this(name, notebookRepo, noteUnloader);
       this.parent = parent;
     }
@@ -467,8 +481,8 @@ public class NoteManager {
       return this.notes.get(noteName);
     }
 
-    public void addNote(String noteName, Note note) {
-      notes.put(noteName, new NoteNode(note, this, notebookRepo, noteUnloader));
+    public void addNote(String noteName, NoteInfo noteInfo) {
+      notes.put(noteName, new NoteNode(noteInfo, this, notebookRepo, noteUnloader));
     }
 
     /**
@@ -501,19 +515,19 @@ public class NoteManager {
       this.notes.remove(noteName);
     }
 
-    public List<Note> removeFolder(String folderName,
+    public List<NoteInfo> removeFolder(String folderName,
                                    AuthenticationInfo subject) throws IOException {
       Folder folder = this.subFolders.remove(folderName);
-      return folder.getRawNotesRecursively();
+      return folder.getNoteInfoRecursively();
     }
 
-    public List<Note> getRawNotesRecursively() {
-      List<Note> notesInfo = new ArrayList<>();
+    public List<NoteInfo> getNoteInfoRecursively() {
+      List<NoteInfo> notesInfo = new ArrayList<>();
       for (NoteNode noteNode : this.notes.values()) {
-        notesInfo.add(noteNode.getRawNote());
+        notesInfo.add(noteNode.getNoteInfo());
       }
       for (Folder folder : subFolders.values()) {
-        notesInfo.addAll(folder.getRawNotesRecursively());
+        notesInfo.addAll(folder.getNoteInfoRecursively());
       }
       return notesInfo;
     }
@@ -562,87 +576,72 @@ public class NoteManager {
   public static class NoteNode {
 
     private Folder parent;
-    private Note note;
+    private NoteInfo noteinfo;
     private NotebookRepo notebookRepo;
-    private NoteUnloader noteUnloader;
+    private NoteCache noteCache;
 
-    public NoteNode(Note note, Folder parent, NotebookRepo notebookRepo, NoteUnloader noteUnloader) {
-      this.note = note;
+    public NoteNode(NoteInfo noteinfo, Folder parent, NotebookRepo notebookRepo, NoteCache noteUnloader) {
+      this.noteinfo = noteinfo;
       this.parent = parent;
       this.notebookRepo = notebookRepo;
-      this.noteUnloader = noteUnloader;
+      this.noteCache = noteUnloader;
     }
 
     /**
-     * This method will process note in a eviction aware manner by loading it from NotebookRepo. 
-     * 
+     * This method will process note in a eviction aware manner by loading it from NotebookRepo.
+     *
      * If you just want to get noteId, noteName or
      * notePath, you can call method getNoteId, getNoteName & getNotePath
      *
      * @param reload force a reload from {@link NotebookRepo}
-     * @param noteProcessor callback 
+     * @param noteProcessor callback
      * @return result of the noteProcessor
      * @throws IOException
      */
     public <T> T loadAndProcessNote(boolean reload, NoteProcessor<T> noteProcessor)
         throws IOException {
-
-      final Lock lock = note.getLock().readLock();
-      try {
-        // aquire lock to avoid eviction of that note
-        lock.lock();
-
         // load note
-        synchronized (this) {
-          if (!note.isLoaded() || reload) {
-            final ReentrantReadWriteLock originalLock = note.getLock(); // retain original lock 
-            note = notebookRepo.get(note.getId(), note.getPath(), AuthenticationInfo.ANONYMOUS);
-            if (parent.toString().equals("/")) {
-              note.setPath("/" + note.getName());
-            } else {
-              note.setPath(parent.toString() + "/" + note.getName());
-            }
-            note.setLock(originalLock);
-            note.setCronSupported(ZeppelinConfiguration.create());
-            note.setLoaded(true);
+      Note note;
+      synchronized (this) {
+        note = noteCache.getNote(noteinfo.getId());
+        if (note == null || reload) {
+          note = notebookRepo.get(noteinfo.getId(), noteinfo.getPath(), AuthenticationInfo.ANONYMOUS);
+          if (parent.toString().equals("/")) {
+            note.setPath("/" + note.getName());
+          } else {
+            note.setPath(parent.toString() + "/" + note.getName());
           }
+          note.setCronSupported(ZeppelinConfiguration.create());
+          noteCache.putNote(note);
         }
-
-        // free other notes from memory
-        noteUnloader.handleEviction(note);
-
+        note.getLock().readLock().lock();
+      }
+      try {
         // process note
         return noteProcessor.process(note);
-
       } finally {
-        lock.unlock();
+        note.getLock().readLock().unlock();
       }
     }
 
     public String getNoteId() {
-      return this.note.getId();
+      return this.noteinfo.getId();
     }
 
     public String getNoteName() {
-      return this.note.getName();
+      return this.noteinfo.getNoteName();
     }
 
     public String getNotePath() {
       if (parent.getPath().equals("/")) {
-        return parent.getPath() + note.getName();
+        return parent.getPath() + noteinfo.getNoteName();
       } else {
-        return parent.getPath() + "/" + note.getName();
+        return parent.getPath() + "/" + noteinfo.getNoteName();
       }
     }
 
-    /**
-     * This method will just return the note object without checking whether it is loaded
-     * from NotebookRepo.
-     *
-     * @return
-     */
-    public Note getRawNote() {
-      return this.note;
+    public NoteInfo getNoteInfo() {
+      return this.noteinfo;
     }
 
     public Folder getParent() {
@@ -659,14 +658,14 @@ public class NoteManager {
     }
 
     public void setNotePath(String notePath) {
-      this.note.setPath(notePath);
+      this.noteinfo.setPath(notePath);
     }
 
     /**
      * This is called when the ancestor folder is moved.
      */
     public void updateNotePath() {
-      this.note.setPath(getNotePath());
+      this.noteinfo.setPath(getNotePath());
     }
   }
 
@@ -675,28 +674,34 @@ public class NoteManager {
    * Leverage a simple LRU cache for determing evictable notes.
    * Notes are not evicted in case they are currently in use (and have a lock).
    */
-  private static class NoteUnloader {
+  private static class NoteCache {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NoteUnloader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NoteCache.class);
 
     private final int threshold;
-    private final LRUCache lruCache;
+    private final Map<String, Note> lruCache;
 
-    public NoteUnloader(final int threshold) {
+    public NoteCache(final int threshold) {
       // Registering the threshold to compare the configured threshold with the actual note cache
       this.threshold = Metrics.gauge("zeppelin_note_cache_threshold", Tags.empty(), threshold);
-      this.lruCache = Metrics.gaugeMapSize("zeppelin_note_cache", Tags.empty(), new LRUCache());
+      // use a synchronized map to make the NoteCache thread-safe
+      this.lruCache = Metrics.gaugeMapSize("zeppelin_note_cache", Tags.empty(), Collections.synchronizedMap(new LRUCache()));
     }
 
     public int getSize() {
       return lruCache.size();
     }
 
-    public synchronized Note handleEviction(final Note note) {
-      if (lruCache.get(note.getId()) == null) { // mark access in LRUCache using get(...) Method.
-        lruCache.put(note.getId(), note);
-      }
-      return note;
+    public Note getNote(String noteId) {
+      return lruCache.get(noteId);
+    }
+
+    public void putNote(Note note) {
+      lruCache.put(note.getId(), note);
+    }
+
+    public Note removeNote(String noteId) {
+      return lruCache.remove(noteId);
     }
 
     private class LRUCache extends LinkedHashMap<String, Note> {
@@ -704,12 +709,12 @@ public class NoteManager {
       private static final long serialVersionUID = 1L;
 
       public LRUCache() {
-        super(NoteUnloader.this.threshold, 0.5f, true /* lru by access mode */);
+        super(NoteCache.this.threshold, 0.5f, true /* lru by access mode */);
       }
 
       @Override
       protected boolean removeEldestEntry(java.util.Map.Entry<String, Note> eldest) {
-        if (size() <= NoteUnloader.this.threshold) {
+        if (size() <= NoteCache.this.threshold) {
           return false;
         }
 
@@ -717,7 +722,6 @@ public class NoteManager {
         final Lock lock = eldestNote.getLock().writeLock();
         if (lock.tryLock()) { // avoid eviction in case the note is in use
           try {
-            eldestNote.unLoad();
             return true;
           } finally {
             lock.unlock();

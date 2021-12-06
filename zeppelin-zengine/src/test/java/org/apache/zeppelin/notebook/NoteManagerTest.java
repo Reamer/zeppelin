@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class NoteManagerTest {
   private NoteManager noteManager;
@@ -35,11 +37,6 @@ public class NoteManagerTest {
     Note note1 = createNote("/prod/my_note1");
     Note note2 = createNote("/dev/project_2/my_note2");
     Note note3 = createNote("/dev/project_3/my_note3");
-
-    // Fake loaded state
-    note1.setLoaded(true);
-    note2.setLoaded(true);
-    note3.setLoaded(true);
 
     // add note
     this.noteManager.saveNote(note1);
@@ -127,7 +124,7 @@ public class NoteManagerTest {
     // add notes with read flag
     for (int i = 0; i < cacheThreshold; ++i) {
       Note note = createNote("/prod/noteDirty" + i);
-      note.getLock().readLock();
+      note.getLock().readLock().lock();
       noteManager.addNote(note, AuthenticationInfo.ANONYMOUS);
     }
     assertEquals(cacheThreshold, noteManager.getCacheSize());
@@ -136,9 +133,12 @@ public class NoteManagerTest {
     Note noteNew2 = createNote("/prod/notenew2");
     noteManager.addNote(noteNew2, AuthenticationInfo.ANONYMOUS);
 
-    // since all notes in the cache are dirty, the cache grows
+    // since all notes in the cache are with a read lock, the cache grows
     assertEquals(cacheThreshold + 1, noteManager.getCacheSize());
 
-
+    assertTrue(noteManager.containsNote(noteNew2.getPath()));
+    noteManager.removeNote(noteNew2.getId(), AuthenticationInfo.ANONYMOUS);
+    assertFalse(noteManager.containsNote(noteNew2.getPath()));
+    assertEquals(cacheThreshold, noteManager.getCacheSize());
   }
 }

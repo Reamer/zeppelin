@@ -66,8 +66,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  * Represent the note of Zeppelin. All the note and its paragraph operations are done
@@ -152,7 +150,6 @@ public class Note implements JsonSerializable {
   private String path;
 
   /********************************** transient fields ******************************************/
-  private transient boolean loaded = false;
   /*
    * Do not use the fair algorithm, because it blocks read accesses when a write access is waiting.
    * We have read accesses from different threads, which are dependent on each other.
@@ -187,11 +184,6 @@ public class Note implements JsonSerializable {
     setCronSupported(zConf);
   }
 
-  public Note(NoteInfo noteInfo) {
-    this.id = noteInfo.getId();
-    setPath(noteInfo.getPath());
-  }
-
   public String getPath() {
     return path;
   }
@@ -212,31 +204,6 @@ public class Note implements JsonSerializable {
 
   private void generateId() {
     id = IdHashes.generateId();
-  }
-
-  public boolean isLoaded() {
-    return loaded;
-  }
-
-  public void setLoaded(boolean loaded) {
-    this.loaded = loaded;
-  }
-
-  /**
-   * Release note memory
-   */
-  public void unLoad() {
-    if (isRunning() || isParagraphRunning()) {
-      LOGGER.warn("Unable to unload note because it is in RUNNING");
-    } else {
-      this.setLoaded(false);
-      this.paragraphs = null;
-      this.config = null;
-      this.info = null;
-      this.noteForms = null;
-      this.noteParams = null;
-      this.angularObjects = null;
-    }
   }
 
   public boolean isParagraphRunning() {
