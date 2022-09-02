@@ -39,13 +39,17 @@ public class AbstractRestApi {
     this.authenticationService = authenticationService;
   }
 
-  protected ServiceContext getServiceContext() {
-    AuthenticationInfo authInfo = new AuthenticationInfo(authenticationService.getPrincipal());
-    authInfo.setRoles(authenticationService.getAssociatedRoles());
+  protected Set<String> getUserAndRoles() {
     Set<String> userAndRoles = new HashSet<>();
     userAndRoles.add(authenticationService.getPrincipal());
     userAndRoles.addAll(authenticationService.getAssociatedRoles());
-    return new ServiceContext(authInfo, userAndRoles);
+    return userAndRoles;
+  }
+
+  protected ServiceContext getServiceContext() {
+    AuthenticationInfo authInfo = new AuthenticationInfo(authenticationService.getPrincipal());
+    authInfo.setRoles(authenticationService.getAssociatedRoles());
+    return new ServiceContext(authInfo, getUserAndRoles());
   }
 
   public static class RestServiceCallback<T> extends SimpleServiceCallback<T> {

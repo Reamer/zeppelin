@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -62,6 +63,7 @@ import org.apache.zeppelin.rest.exception.ForbiddenException;
 import org.apache.zeppelin.rest.exception.NoteNotFoundException;
 import org.apache.zeppelin.rest.exception.ParagraphNotFoundException;
 import org.apache.zeppelin.scheduler.Job;
+import org.apache.zeppelin.server.JsonResponse;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.slf4j.Logger;
@@ -632,6 +634,8 @@ public class NotebookService {
   public Paragraph insertParagraph(String noteId,
                                    int index,
                                    Map<String, Object> config,
+                                   String title,
+                                   String text,
                                    ServiceContext context,
                                    ServiceCallback<Paragraph> callback) throws IOException {
     if (!checkPermission(noteId, Permission.WRITER, Message.OP.INSERT_PARAGRAPH, context,
@@ -646,10 +650,57 @@ public class NotebookService {
           }
           Paragraph newPara = note.insertNewParagraph(index, context.getAutheInfo());
           newPara.mergeConfig(config);
+          newPara.setText(text);
+          newPara.setTitle(title);
           notebook.saveNote(note, context.getAutheInfo());
           callback.onSuccess(newPara, context);
           return newPara;
         });
+  }
+
+  public Paragraph addParagraph(String noteId,
+                                Map<String, Object> config,
+                                String title,
+                                String text,
+                                ServiceContext context,
+                                ServiceCallback<Paragraph> callback) throws IOException {
+    if (!checkPermission(noteId, Permission.WRITER, Message.OP.INSERT_PARAGRAPH, context,
+      callback)) {
+      return null;
+    }
+
+    return notebook.processNote(noteId,
+      note -> {
+        if (note == null) {
+          throw new NoteNotFoundException(noteId);
+        }
+        Paragraph newPara = note.addNewParagraph(context.getAutheInfo());
+        newPara.mergeConfig(config);
+        newPara.setText(text);
+        newPara.setTitle(title);
+        notebook.saveNote(note, context.getAutheInfo());
+        callback.onSuccess(newPara, context);
+        return newPara;
+      });
+  }
+
+  public Paragraph getParagraph(String noteId,
+    String paragraphId,
+    ServiceContext context,
+    ServiceCallback<Paragraph> callback) throws IOException {
+    if (!checkPermission(noteId, Permission.READER, null, context, callback)) {
+      return null;
+    }
+
+    return notebook.processNote(noteId,
+      note -> {
+        if (note == null) {
+          throw new NoteNotFoundException(noteId);
+        }
+        Paragraph p = note.getParagraph(paragraphId);
+        callback.onSuccess(p, context);
+        return p;
+      });
   }
 
   public void restoreNote(String noteId,
@@ -1133,6 +1184,45 @@ public class NotebookService {
       });
   }
 
+  public Map<String, Object> getConfig(String noteId,
+      ServiceContext context,
+      ServiceCallback<Map<String, Object>> callback) throws IOException {
+    return notebook.processNote(noteId,
+        note -> {
+          if (note == null) {
+            throw new NoteNotFoundException(noteId);
+          }
+          if (!checkPermission(noteId, Permission.READER, null, context,
+              callback)) {
+            return null;
+          }
+          checkIfNoteSupportsCron(note);
+          return note.getConfig();
+        });
+  }
+
+  public void deleteCron(String noteId, ServiceContext context,
+      ServiceCallback<Map<String, Object>> callback) throws IOException {
+    notebook.processNote(noteId,
+        note -> {
+          if (note == null) {
+            throw new NoteNotFoundException(noteId);
+          }
+          if (!checkPermission(noteId, Permission.OWNER, null, context,
+              callback)) {
+            return null;
+          }
+          checkIfNoteSupportsCron(note);
+
+          Map<String, Object> config = note.getConfig();
+          config.remove("cron");
+          config.remove("releaseresource");
+          note.setConfig(config);
+          schedulerService.refreshCron(note.getId());
+          return null;
+        });
+  }
+
   public void updatePersonalizedMode(String noteId,
                                      boolean isPersonalized,
                                      ServiceContext context,
@@ -1495,6 +1585,13 @@ public class NotebookService {
           context.getAutheInfo().getUser() + " belongs to: " + context.getUserAndRoles();
       callback.onFailure(new ForbiddenException(errorMsg), context);
       return false;
+    }
+  }
+
+  private void checkIfNoteSupportsCron(Note note) {
+    if (!note.isCronSupported(notebook.getConf())) {
+      LOGGER.error("Cron is not enabled from Zeppelin server");
+      throw new ForbiddenException("Cron is not enabled from Zeppelin server");
     }
   }
 }

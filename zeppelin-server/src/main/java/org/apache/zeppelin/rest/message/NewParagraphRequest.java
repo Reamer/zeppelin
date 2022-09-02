@@ -16,7 +16,7 @@
  */
 package org.apache.zeppelin.rest.message;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * NewParagraphRequest rest api request message
@@ -30,10 +30,10 @@ public class NewParagraphRequest {
 
   private final String title;
   private final String text;
-  private final Double index;
-  private final HashMap< String, Object > config;
+  private final Integer index;
+  private final Map<String, Object> config;
 
-  public NewParagraphRequest(String title, String text, Double index, HashMap<String, Object> config) {
+  public NewParagraphRequest(String title, String text, Integer index, Map<String, Object> config) {
     this.title = title;
     this.text = text;
     this.index = index;
@@ -48,11 +48,11 @@ public class NewParagraphRequest {
     return text;
   }
 
-  public Double getIndex() {
+  public Integer getIndex() {
     return index;
   }
 
-  public HashMap< String, Object > getConfig() {
+  public Map<String, Object> getConfig() {
     return config;
   }
 }
