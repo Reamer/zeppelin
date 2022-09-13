@@ -162,6 +162,7 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
         remoteInterpreterProcessListener,
         appEventListener,
         ConfigStorage.getInstance(zeppelinConfiguration));
+    LOGGER.warn("Init InterpreterSettingManager");
   }
 
   public InterpreterSettingManager(ZeppelinConfiguration conf,

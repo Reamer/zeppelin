@@ -27,10 +27,13 @@ import org.apache.zeppelin.cluster.event.ClusterMessage;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.storage.ConfigStorage;
 import org.apache.zeppelin.user.AuthenticationInfo;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +44,8 @@ import java.util.Set;
  * This class is responsible for maintain notes authorization info. And provide api for
  * setting and querying note authorization info.
  */
+@Service
+@Singleton
 public class AuthorizationService implements ClusterEventListener {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationService.class);

@@ -18,10 +18,10 @@
 
 package org.apache.zeppelin.notebook.repo;
 
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.user.AuthenticationInfo;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -29,14 +29,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+@Service
+@Named
+@Singleton
 public class InMemoryNotebookRepo implements NotebookRepo {
 
   private Map<String, Note> notes = new HashMap<>();
-
-  @Override
-  public void init(ZeppelinConfiguration zConf) throws IOException {
-
-  }
 
   @Override
   public Map<String, NoteInfo> list(AuthenticationInfo subject) throws IOException {

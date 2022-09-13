@@ -21,15 +21,17 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
-import org.apache.zeppelin.notebook.OldNoteInfo;
 import org.apache.zeppelin.notebook.Paragraph;
-import org.apache.zeppelin.plugin.PluginManager;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.zeppelin.util.Util;
+import org.glassfish.hk2.api.Immediate;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +43,8 @@ import java.util.Map;
 /**
  * Notebook repository sync with remote storage
  */
+@Service
+@Singleton
 public class NotebookRepoSync implements NotebookRepoWithVersionControl {
   private static final Logger LOGGER = LoggerFactory.getLogger(NotebookRepoSync.class);
   private static final int MAX_REPO_NUM = 2;
@@ -53,17 +57,21 @@ public class NotebookRepoSync implements NotebookRepoWithVersionControl {
   private List<NotebookRepo> repos = new ArrayList<>();
   private boolean oneWaySync;
 
+  private final ServiceLocator locator;
+
   /**
    * @param conf
    */
-  @SuppressWarnings("static-access")
   @Inject
-  public NotebookRepoSync(ZeppelinConfiguration conf) throws IOException {
+  public NotebookRepoSync(ZeppelinConfiguration conf, ServiceLocator locator) throws IOException {
+    this.locator = locator;
     init(conf);
   }
 
-  @Override
   public void init(ZeppelinConfiguration conf) throws IOException {
+    // for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+    // System.out.println(ste);
+    // }
     oneWaySync = conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_ONE_WAY_SYNC);
     String allStorageClassNames = conf.getNotebookStorageClass().trim();
     if (allStorageClassNames.isEmpty()) {
@@ -79,16 +87,20 @@ public class NotebookRepoSync implements NotebookRepoWithVersionControl {
 
     // init the underlying NotebookRepo
     for (int i = 0; i < Math.min(storageClassNames.length, getMaxRepoNum()); i++) {
-      NotebookRepo notebookRepo = PluginManager.get().loadNotebookRepo(storageClassNames[i].trim());
-      notebookRepo.init(conf);
+
+      NotebookRepo notebookRepo = locator.getService(NotebookRepo.class, storageWrapper(storageClassNames[i].trim()));
+      LOGGER.warn(notebookRepo.toString());
+      // for (NotebookRepo repo : locator.<NotebookRepo> getAllServices(NotebookRepo.class)) {
+      // LOGGER.warn("available repos {}", repo.getClass().getCanonicalName());
+      // }
+      LOGGER.warn("RepoSearch: {}", storageWrapper(storageClassNames[i].trim()));
       repos.add(notebookRepo);
     }
 
     // couldn't initialize any storage, use default
     if (getRepoCount() == 0) {
       LOGGER.info("No storage could be initialized, using default {} storage", DEFAULT_STORAGE);
-      NotebookRepo defaultNotebookRepo = PluginManager.get().loadNotebookRepo(DEFAULT_STORAGE);
-      defaultNotebookRepo.init(conf);
+      NotebookRepo defaultNotebookRepo = locator.getService(NotebookRepo.class, storageWrapper(DEFAULT_STORAGE));
       repos.add(defaultNotebookRepo);
     }
 
@@ -100,6 +112,10 @@ public class NotebookRepoSync implements NotebookRepoWithVersionControl {
         LOGGER.error("Couldn't sync anonymous mode on start ", e);
       }
     }
+  }
+
+  private String storageWrapper(String storageClassName) {
+    return storageClassName.substring(storageClassName.lastIndexOf('.') + 1).trim();
   }
 
   public List<NotebookRepoWithSettings> getNotebookRepos(AuthenticationInfo subject) {

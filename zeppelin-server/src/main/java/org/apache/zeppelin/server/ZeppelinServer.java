@@ -163,7 +163,7 @@ public class ZeppelinServer extends ResourceConfig {
     ContextHandlerCollection contexts = new ContextHandlerCollection();
     timedHandler.setHandler(contexts);
 
-    ServiceLocator sharedServiceLocator = ServiceLocatorFactory.getInstance().create(SERVICE_LOCATOR_NAME);
+    ServiceLocator sharedServiceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(SERVICE_LOCATOR_NAME);
     ServiceLocatorUtilities.enableImmediateScope(sharedServiceLocator);
     ServiceLocatorUtilities.addClasses(sharedServiceLocator,
       NotebookRepoSync.class,
@@ -186,7 +186,6 @@ public class ZeppelinServer extends ResourceConfig {
             bindAsContract(GsonProvider.class).in(Singleton.class);
             bindAsContract(WebApplicationExceptionMapper.class).in(Singleton.class);
             bindAsContract(AdminService.class).in(Singleton.class);
-            bindAsContract(AuthorizationService.class).in(Singleton.class);
             bindAsContract(ConnectionManager.class).in(Singleton.class);
             bindAsContract(NoteManager.class).in(Singleton.class);
             // TODO(jl): Will make it more beautiful

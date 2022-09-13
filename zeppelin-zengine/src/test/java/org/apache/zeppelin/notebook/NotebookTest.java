@@ -95,8 +95,7 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_CRON_ENABLE.getVarName(), "true");
     super.setUp();
 
-    notebookRepo = new VFSNotebookRepo();
-    notebookRepo.init(conf);
+    notebookRepo = new VFSNotebookRepo(conf);
     noteManager = new NoteManager(notebookRepo, conf);
     authorizationService = new AuthorizationService(noteManager, conf);
 
@@ -134,11 +133,6 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
   }
 
   public static class DummyNotebookRepo implements NotebookRepo {
-
-    @Override
-    public void init(ZeppelinConfiguration zConf) throws IOException {
-
-    }
 
     @Override
     public Map<String, NoteInfo> list(AuthenticationInfo subject) throws IOException {
@@ -214,11 +208,6 @@ public class NotebookTest extends AbstractInterpreterTest implements ParagraphJo
     public Note setNoteRevision(String noteId, String notePath, String revId, AuthenticationInfo subject) throws
         IOException {
       return null;
-    }
-
-    @Override
-    public void init(ZeppelinConfiguration zConf) throws IOException {
-
     }
 
     @Override

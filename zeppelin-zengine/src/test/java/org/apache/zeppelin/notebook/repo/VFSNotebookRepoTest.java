@@ -48,9 +48,8 @@ public class VFSNotebookRepoTest {
     notebookDir = Files.createTempDirectory("notebookDir").toFile();
     System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_DIR.getVarName(),
         notebookDir.getAbsolutePath());
-    notebookRepo = new VFSNotebookRepo();
     zConf = ZeppelinConfiguration.create();
-    notebookRepo.init(zConf);
+    notebookRepo = new VFSNotebookRepo(zConf);
   }
 
   @After

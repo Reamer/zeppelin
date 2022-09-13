@@ -20,6 +20,8 @@ package org.apache.zeppelin.notebook.repo;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.notebook.repo.mock.VFSNotebookRepoMock;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +46,7 @@ public class NotebookRepoSyncInitializationTest {
   private String invalidTwoStorageConf = validFirstStorageClass + "," + invalidStorageClass;
   private String unsupportedStorageConf = validFirstStorageClass + "," + validSecondStorageClass + "," + validSecondStorageClass;
   private String emptyStorageConf = "";
+  private ServiceLocator locator = ServiceLocatorUtilities.createAndPopulateServiceLocator();
 
   @Before
   public void setUp(){
@@ -63,7 +66,7 @@ public class NotebookRepoSyncInitializationTest {
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_STORAGE.getVarName(), validOneStorageConf);
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
-    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
     // check proper initialization of one storage
     assertEquals(notebookRepoSync.getRepoCount(), 1);
     assertTrue(notebookRepoSync.getRepo(0) instanceof VFSNotebookRepo);
@@ -89,7 +92,7 @@ public class NotebookRepoSyncInitializationTest {
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_STORAGE.getVarName(), validTwoStorageConf);
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
-    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
     // check that both initialized
     assertEquals(notebookRepoSync.getRepoCount(), 2);
     assertTrue(notebookRepoSync.getRepo(0) instanceof VFSNotebookRepo);
@@ -103,7 +106,7 @@ public class NotebookRepoSyncInitializationTest {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
     try {
-      NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+      NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
       fail("Should throw exception due to invalid NotebookRepo");
     } catch (IOException e) {
       LOGGER.error(e.getMessage());
@@ -131,7 +134,7 @@ public class NotebookRepoSyncInitializationTest {
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_STORAGE.getVarName(), unsupportedStorageConf);
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
-    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
     // check that first two storages initialized instead of three
     assertEquals(notebookRepoSync.getRepoCount(), 2);
     assertTrue(notebookRepoSync.getRepo(0) instanceof VFSNotebookRepo);
@@ -144,7 +147,7 @@ public class NotebookRepoSyncInitializationTest {
     System.setProperty(ConfVars.ZEPPELIN_NOTEBOOK_STORAGE.getVarName(), emptyStorageConf);
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
-    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+    NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
     // check initialization of one default storage
     assertEquals(notebookRepoSync.getRepoCount(), 1);
     assertTrue(notebookRepoSync.getRepo(0) instanceof NotebookRepoWithVersionControl);
@@ -156,7 +159,7 @@ public class NotebookRepoSyncInitializationTest {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     // create repo
     try {
-      NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf);
+      NotebookRepoSync notebookRepoSync = new NotebookRepoSync(conf, locator);
       fail("Should throw exception due to invalid NotebookRepo");
     } catch (IOException e) {
       LOGGER.error(e.getMessage());

@@ -27,6 +27,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
@@ -39,26 +44,26 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.user.AuthenticationInfo;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
 * NotebookRepo implementation based on apache vfs
 */
+@Service
+@Named
+@Singleton
 public class VFSNotebookRepo implements NotebookRepo {
   private static final Logger LOGGER = LoggerFactory.getLogger(VFSNotebookRepo.class);
 
-  protected ZeppelinConfiguration conf;
+  protected final ZeppelinConfiguration conf;
   protected FileSystemManager fsManager;
   protected FileObject rootNotebookFileObject;
   protected String rootNotebookFolder;
 
-  public VFSNotebookRepo() {
-
-  }
-
-  @Override
-  public void init(ZeppelinConfiguration conf) throws IOException {
+  @Inject
+  public VFSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
     setNotebookDirectory(conf.getNotebookDir());
   }

@@ -18,6 +18,12 @@ package org.apache.zeppelin.conf;
 
 
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
+import org.apache.zeppelin.notebook.repo.GitNotebookRepo;
+import org.apache.zeppelin.notebook.repo.InMemoryNotebookRepo;
+import org.apache.zeppelin.notebook.repo.NotebookRepo;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -49,6 +55,21 @@ public class ZeppelinConfigurationTest {
     Assert.assertEquals(2, origins.size());
     Assert.assertEquals("http://onehost:8080", origins.get(0));
     Assert.assertEquals("http://otherhost.com", origins.get(1));
+  }
+
+  @Test
+  public void getAllowedOrigins1Test2() throws MalformedURLException {
+    ServiceLocator locator = ServiceLocatorUtilities.createAndPopulateServiceLocator();
+    // ServiceLocatorUtilities.addClasses(locator, GitNotebookRepo.class, InMemoryNotebookRepo.class);
+    List<NotebookRepo> repos = locator.<NotebookRepo> getAllServices(NotebookRepo.class);
+    for (NotebookRepo repo : repos) {
+      System.out.println(repo.getClass().getCanonicalName());
+    }
+    System.out.println(locator.getService(GitNotebookRepo.class, "GitNotebookRepo"));
+    ZeppelinConfiguration conf = ZeppelinConfiguration.create("test-zeppelin-site1.xml");
+    List<String> origins = conf.getAllowedOrigins();
+    Assert.assertEquals(1, origins.size());
+    Assert.assertEquals("http://onehost:8080", origins.get(0));
   }
 
   @Test

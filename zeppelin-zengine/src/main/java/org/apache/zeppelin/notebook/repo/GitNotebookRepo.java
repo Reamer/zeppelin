@@ -17,7 +17,6 @@
 
 package org.apache.zeppelin.notebook.repo;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.user.AuthenticationInfo;
@@ -32,6 +31,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +40,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * NotebookRepo that hosts all the notebook FS in a single Git repo
@@ -51,28 +55,22 @@ import java.util.List;
  *
  *   TODO(bzz): add default .gitignore
  */
+@Service
+@Named
+@Singleton
 public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWithVersionControl {
   private static final Logger LOGGER = LoggerFactory.getLogger(GitNotebookRepo.class);
 
   private Git git;
 
-  public GitNotebookRepo() {
-    super();
-  }
-
-  @VisibleForTesting
+  @Inject
   public GitNotebookRepo(ZeppelinConfiguration conf) throws IOException {
-    this();
-    init(conf);
+    super(conf);
+    init();
   }
 
-  @Override
-  public void init(ZeppelinConfiguration conf) throws IOException {
-    //TODO(zjffdu), it is weird that I can not call super.init directly here, as it would cause
-    //AbstractMethodError
-    this.conf = conf;
-    setNotebookDirectory(conf.getNotebookDir());
 
+  public void init() throws IOException {
     LOGGER.info("Opening a git repo at '{}'", this.rootNotebookFolder);
     Repository localRepo = new FileRepository(String.join(File.separator, this.rootNotebookFolder, ".git"));
     if (!localRepo.getDirectory().exists()) {

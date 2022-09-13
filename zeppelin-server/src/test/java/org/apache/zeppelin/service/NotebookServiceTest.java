@@ -95,7 +95,7 @@ public class NotebookServiceTest {
     System.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_DIR.getVarName(),
             notebookDir.getAbsolutePath());
     ZeppelinConfiguration zeppelinConfiguration = ZeppelinConfiguration.create();
-    NotebookRepo notebookRepo = new VFSNotebookRepo();
+    NotebookRepo notebookRepo = new VFSNotebookRepo(zeppelinConfiguration);
     notebookRepo.init(zeppelinConfiguration);
 
     InterpreterSettingManager mockInterpreterSettingManager = mock(InterpreterSettingManager.class);

@@ -18,10 +18,10 @@
 package org.apache.zeppelin.notebook.repo;
 
 import org.apache.zeppelin.annotation.ZeppelinApi;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.user.AuthenticationInfo;
+import org.jvnet.hk2.annotations.Contract;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,9 +30,8 @@ import java.util.Map;
 /**
  * Notebook repository (persistence layer) abstraction.
  */
+@Contract
 public interface NotebookRepo {
-
-  void init(ZeppelinConfiguration zConf) throws IOException;
 
   /**
    * Lists notebook information about all notebooks in storage. This method should only read
