@@ -29,7 +29,7 @@ import org.apache.zeppelin.interpreter.ManagedInterpreterGroup;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.zeppelin.user.Credentials;
+import org.apache.zeppelin.user.CredentialsMgr;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +59,7 @@ public class NoteTest {
   ParagraphJobListener paragraphJobListener;
 
   @Mock
-  Credentials credentials;
+  CredentialsMgr credentials;
 
   @Mock
   Interpreter interpreter;

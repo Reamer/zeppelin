@@ -20,6 +20,8 @@ package org.apache.zeppelin.user;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,12 +29,11 @@ public class CredentialsTest {
 
   @Test
   public void testDefaultProperty() throws IOException {
-    Credentials credentials = new Credentials();
-    UserCredentials userCredentials = new UserCredentials();
-    UsernamePassword up1 = new UsernamePassword("user2", "password");
-    userCredentials.putUsernamePassword("hive(vertica)", up1);
-    credentials.putUserCredentials("user1", userCredentials);
-    UserCredentials uc2 = credentials.getUserCredentials("user1");
+    CredentialsMgr credentials = new CredentialsMgr();
+    Credential up1 = new Credential("user2", "password", null, new HashSet<String>(Arrays.asList("user1")));
+    credentials.putCredentialsEntity("hive(vertica)", up1);
+    credentials.putCredentialsEntity("user1", up1);
+    UsernamePasswords uc2 = credentials.getAllUsernamePasswords(new HashSet<String>(Arrays.asList("user1")));
     UsernamePassword up2 = uc2.getUsernamePassword("hive(vertica)");
     assertEquals(up1.getUsername(), up2.getUsername());
     assertEquals(up1.getPassword(), up2.getPassword());

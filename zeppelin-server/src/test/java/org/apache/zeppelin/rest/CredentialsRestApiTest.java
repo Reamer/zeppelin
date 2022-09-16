@@ -17,21 +17,28 @@
 package org.apache.zeppelin.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Map;
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.zeppelin.server.JsonResponse;
 import org.apache.zeppelin.service.AuthenticationService;
 import org.apache.zeppelin.service.NoAuthenticationService;
 import org.apache.zeppelin.user.Credentials;
-import org.apache.zeppelin.user.UserCredentials;
+import org.apache.zeppelin.user.CredentialsMgr;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,12 +46,12 @@ public class CredentialsRestApiTest {
   private final Gson gson = new Gson();
 
   private CredentialRestApi credentialRestApi;
-  private Credentials credentials;
+  private CredentialsMgr credentials;
   private AuthenticationService authenticationService;
 
   @Before
   public void setUp() throws IOException {
-    credentials = new Credentials();
+    credentials = new CredentialsMgr();
     authenticationService = new NoAuthenticationService();
     credentialRestApi = new CredentialRestApi(credentials, authenticationService);
   }
@@ -73,30 +80,83 @@ public class CredentialsRestApiTest {
     assertEquals(Status.BAD_REQUEST, response.getStatusInfo().toEnum());
   }
 
-  public Map<String, UserCredentials> testGetUserCredentials() throws IOException {
+  public Credentials testGetUserCredentials() {
     Response response = credentialRestApi.getCredentials();
-    Map<String, Object> resp =
-        gson.fromJson(
-            response.getEntity().toString(), new TypeToken<Map<String, Object>>() {}.getType());
-    Map<String, Object> body = (Map<String, Object>) resp.get("body");
-    Map<String, UserCredentials> credentialMap =
-        (Map<String, UserCredentials>) body.get("userCredentials");
-    return credentialMap;
+    System.out.println(response.getEntity().toString());
+    Type collectionType = new TypeToken<JsonResponse<Credentials>>() {
+    }.getType();
+    JsonResponse<Credentials> resp = gson.fromJson(response.getEntity().toString(), collectionType);
+    return resp.getBody();
   }
 
   @Test
   public void testCredentialsAPIs() throws IOException {
-    String requestData1 =
-        "{\"entity\" : \"entityname\", \"username\" : \"myuser\", \"password\" " + ": \"mypass\"}";
     String entity = "entityname";
 
-    credentialRestApi.putCredentials(requestData1);
-    assertNotNull("CredentialMap should be null", testGetUserCredentials());
+    String requestData1 =
+      "{\"entity\":\"entityname\",\"username\":\"myuser\",\"password\":\"mypass\"}";
 
-    credentialRestApi.removeCredentialEntity(entity);
-    assertNull("CredentialMap should be null", testGetUserCredentials().get("entity1"));
+    Response response = credentialRestApi.putCredentials(requestData1);
+    assertEquals(Status.OK, response.getStatusInfo().toEnum());
+    assertNotNull("CredentialMap should not be null", testGetUserCredentials());
+    assertNotNull("CredentialMap should not be null", testGetUserCredentials().get(entity));
+    response = credentialRestApi.removeCredentialEntity("not_exists");
+    assertEquals(Status.NOT_FOUND, response.getStatusInfo().toEnum());
+    response = credentialRestApi.removeCredentialEntity(entity);
+    assertEquals(Status.OK, response.getStatusInfo().toEnum());
+    assertNull("CredentialMap should be null", testGetUserCredentials().get(entity));
+  }
 
-    credentialRestApi.removeCredentials();
-    assertEquals("Compare CredentialMap", testGetUserCredentials().toString(), "{}");
+  @Test
+  public void testCredentialsAPIWithRoles() {
+    String entity = "entityname";
+    AuthenticationService mockAuthenticationService = mock(AuthenticationService.class);
+    credentialRestApi = new CredentialRestApi(credentials, mockAuthenticationService);
+    Set<String> roles = new HashSet<>();
+    roles.add("group1");
+    roles.add("group2");
+    when(mockAuthenticationService.getPrincipal()).thenReturn("user");
+    when(mockAuthenticationService.getAssociatedRoles()).thenReturn(roles);
+
+    // Create credentials
+    String requestData1 =
+      "{\"entity\":\"entityname\",\"username\":\"myuser\",\"password\":\"mypass\"}";
+    Response response = credentialRestApi.putCredentials(requestData1);
+    assertEquals(Status.OK, response.getStatusInfo().toEnum());
+    assertNotNull("CredentialMap should not be null", testGetUserCredentials().get(entity));
+    assertTrue("Reader of CredentialMap should be empty", testGetUserCredentials().get(entity).getReaders().isEmpty());
+
+    // Switch to user2
+    when(mockAuthenticationService.getPrincipal()).thenReturn("user2");
+    assertTrue("CredentialMap should empty", testGetUserCredentials().isEmpty());
+    // Try to delete credentials with user 2
+    response = credentialRestApi.removeCredentialEntity(entity);
+    assertEquals(Status.FORBIDDEN, response.getStatusInfo().toEnum());
+
+    // Try to update credentials with user2
+    String requestData2 =
+      "{\"entity\":\"entityname\",\"username\":\"myuser\",\"password\":\"mypass\",\"readers\":[\"group1\"]}";
+    response = credentialRestApi.putCredentials(requestData2);
+    assertEquals(Status.FORBIDDEN, response.getStatusInfo().toEnum());
+
+    // Switch to user
+    when(mockAuthenticationService.getPrincipal()).thenReturn("user");
+
+    // Update credentials
+    response = credentialRestApi.putCredentials(requestData2);
+    assertEquals(Status.OK, response.getStatusInfo().toEnum());
+    assertFalse("CredentialMap should be updated", testGetUserCredentials().get(entity).getReaders().isEmpty());
+
+    // Switch to user2
+    when(mockAuthenticationService.getPrincipal()).thenReturn("user2");
+    assertFalse("CredentialMap should now readable", testGetUserCredentials().isEmpty());
+    assertFalse("CredentialMap should now readable", testGetUserCredentials().get(entity).getReaders().isEmpty());
+    response = credentialRestApi.removeCredentialEntity(entity);
+    assertEquals("Deletion should be forbidden, because user2 is only reader", Status.FORBIDDEN, response.getStatusInfo().toEnum());
+
+    // Switch to user
+    when(mockAuthenticationService.getPrincipal()).thenReturn("user");
+    response = credentialRestApi.removeCredentialEntity(entity);
+    assertEquals("Deletion should be allowed, because user is owner", Status.OK, response.getStatusInfo().toEnum());
   }
 }
