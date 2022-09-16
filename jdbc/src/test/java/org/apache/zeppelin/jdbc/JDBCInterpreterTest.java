@@ -30,6 +30,7 @@ import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.apache.zeppelin.user.UserCredentials;
 import org.apache.zeppelin.user.UsernamePassword;
+import org.apache.zeppelin.user.UsernamePasswords;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -93,6 +94,7 @@ public class JDBCInterpreterTest extends BasicJDBCTestCaseAdapter {
     return p;
   }
 
+  @Override
   @Before
   public void setUp() throws Exception {
     Class.forName("org.h2.Driver");
@@ -524,13 +526,13 @@ public class JDBCInterpreterTest extends BasicJDBCTestCaseAdapter {
 
   private AuthenticationInfo getUserAuth(String user, String entityName, String dbUser,
       String dbPassword) {
-    UserCredentials userCredentials = new UserCredentials();
+    UsernamePasswords userCredentials = new UsernamePasswords();
     if (entityName != null && dbUser != null && dbPassword != null) {
       UsernamePassword up = new UsernamePassword(dbUser, dbPassword);
       userCredentials.putUsernamePassword(entityName, up);
     }
     AuthenticationInfo authInfo = new AuthenticationInfo();
-    authInfo.setUserCredentials(userCredentials);
+    authInfo.setUsernamePasswords(userCredentials);
     authInfo.setUser(user);
     return authInfo;
   }

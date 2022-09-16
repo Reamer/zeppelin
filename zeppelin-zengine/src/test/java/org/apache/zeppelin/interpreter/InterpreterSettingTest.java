@@ -28,7 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -506,7 +508,7 @@ public class InterpreterSettingTest extends AbstractInterpreterTest{
 
   @Test
   public void testIsUserAuthorized() {
-      List<String> userAndRoles = new ArrayList<>();
+      Set<String> userAndRoles = new HashSet<>();
       userAndRoles.add("User1");
       userAndRoles.add("Role1");
       userAndRoles.add("Role2");
