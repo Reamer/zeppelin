@@ -39,7 +39,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,7 +50,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.thrift.TException;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectBuilder;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
@@ -69,6 +67,7 @@ import org.apache.zeppelin.notebook.repo.NotebookRepoWithVersionControl;
 import org.apache.zeppelin.MiniZeppelinServer;
 import org.apache.zeppelin.common.Message;
 import org.apache.zeppelin.common.Message.OP;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.rest.AbstractTestRestApi;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
@@ -444,7 +443,7 @@ class NotebookServerTest extends AbstractTestRestApi {
 
       // get reference to interpreterGroup
       InterpreterGroup interpreterGroup = null;
-      List<InterpreterSetting> settings = notebook.processNote(note1Id, note1-> note1.getBindedInterpreterSettings(new ArrayList<>()));
+      List<InterpreterSetting> settings = notebook.processNote(note1Id, note1 -> note1.getBindedInterpreterSettings(new HashSet<>()));
       for (InterpreterSetting setting : settings) {
         if (setting.getName().equals("angular")) {
           interpreterGroup = setting.getOrCreateInterpreterGroup("anonymous", note1Id);

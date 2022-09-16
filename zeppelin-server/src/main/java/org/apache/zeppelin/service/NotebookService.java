@@ -1482,7 +1482,7 @@ public class NotebookService {
         if (note == null) {
           return Collections.emptyList();
         } else {
-          return note.getBindedInterpreterSettings(new ArrayList<>(context.getUserAndRoles()));
+          return note.getBindedInterpreterSettings(context.getUserAndRoles());
         }
       });
     for (InterpreterSetting setting : settings) {

@@ -49,6 +49,7 @@ import org.apache.zeppelin.notebook.scheduler.NoSchedulerService;
 import org.apache.zeppelin.storage.ConfigStorage;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.apache.zeppelin.user.Credentials;
+import org.apache.zeppelin.user.CredentialsMgr;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,7 +85,7 @@ class NotebookServiceRaceConditionTest {
 
     InterpreterSettingManager mockInterpreterSettingManager = mock(InterpreterSettingManager.class);
     InterpreterFactory mockInterpreterFactory = mock(InterpreterFactory.class);
-    Credentials credentials = new Credentials();
+    CredentialsMgr credentials = new CredentialsMgr(zConf, storage);
     NoteManager noteManager = new NoteManager(notebookRepo, zConf);
     AuthorizationService authorizationService =
         new AuthorizationService(noteManager, zConf, storage);
