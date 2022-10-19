@@ -146,11 +146,13 @@ public class CredentialsRestApiTest {
     response = credentialRestApi.putCredentials(requestData2);
     assertEquals(Status.OK, response.getStatusInfo().toEnum());
     assertFalse("CredentialMap should be updated", testGetUserCredentials().get(entity).getReaders().isEmpty());
+    assertEquals("Password should be readable the owner", "mypass", testGetUserCredentials().get(entity).getPassword());
 
     // Switch to user2
     when(mockAuthenticationService.getPrincipal()).thenReturn("user2");
     assertFalse("CredentialMap should now readable", testGetUserCredentials().isEmpty());
     assertFalse("CredentialMap should now readable", testGetUserCredentials().get(entity).getReaders().isEmpty());
+    assertNull("Password should be not readable be a reader", testGetUserCredentials().get(entity).getPassword());
     response = credentialRestApi.removeCredentialEntity(entity);
     assertEquals("Deletion should be forbidden, because user2 is only reader", Status.FORBIDDEN, response.getStatusInfo().toEnum());
 

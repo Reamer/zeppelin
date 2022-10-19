@@ -93,7 +93,7 @@ public class CredentialsMgr {
 
   public UsernamePasswords getAllUsernamePasswords(Set<String> userAndRoles) {
     UsernamePasswords up = new UsernamePasswords();
-    up.putAll(getAllReadableCredentials(userAndRoles));
+    up.putAll(getAllReadableCredentials(userAndRoles, false));
     return up;
   }
 
@@ -101,11 +101,21 @@ public class CredentialsMgr {
     return credentials.get(entity);
   }
 
-  public Credentials getAllReadableCredentials(Set<String> userAndRoles) {
+  /**
+   *
+   * @param userAndRoles Set of user and roles of the current user
+   * @param maskPassword if true, all credential password information for readers will be removed
+   * @return
+   */
+  public Credentials getAllReadableCredentials(Set<String> userAndRoles, boolean maskPassword) {
     Credentials sharedCreds = new Credentials();
     for (Entry<String, Credential> cred : credentials.entrySet()) {
       if (isReader(cred.getValue(), userAndRoles)) {
-        sharedCreds.putCredential(cred.getKey(), cred.getValue());
+        if (maskPassword && !isOwner(cred.getValue(), userAndRoles)) {
+          sharedCreds.putCredential(cred.getKey(), Credential.credentialWithoutPassword(cred.getValue()));
+        } else {
+          sharedCreds.putCredential(cred.getKey(), cred.getValue());
+        }
       }
     }
     return sharedCreds;
