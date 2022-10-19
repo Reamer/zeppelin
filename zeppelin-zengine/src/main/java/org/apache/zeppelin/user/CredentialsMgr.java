@@ -23,6 +23,8 @@ import java.util.Map.Entry;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.storage.ConfigStorage;
@@ -177,7 +179,10 @@ public class CredentialsMgr {
   private void loadFromFile() throws IOException {
     try {
       String json = storage.loadCredentials();
-      if (json != null && encryptor != null) {
+      if (StringUtils.isBlank(json)) {
+        return;
+      }
+      if (encryptor != null) {
         json = encryptor.decrypt(json);
       }
 
@@ -190,7 +195,7 @@ public class CredentialsMgr {
     }
   }
 
-  public static Credentials parseToCredentials(String json, Gson gson) {
+  public static Credentials parseToCredentials(@Nonnull String json, Gson gson) {
     CredentialsInfoSaving info = gson.fromJson(json, CredentialsInfoSaving.class);
     if (info.getCredentialsMap() != null) {
       return info.getCredentialsMap();
