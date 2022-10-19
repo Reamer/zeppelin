@@ -100,7 +100,7 @@ public class CredentialRestApi extends AbstractRestApi {
     String user = authenticationService.getPrincipal();
     Set<String> roles = authenticationService.getAssociatedRoles();
     LOGGER.info("getCredentials for user {} with roles {}", user, roles);
-    Credentials creds = credentialsMgr.getAllReadableCredentials(getUserAndRoles());
+    Credentials creds = credentialsMgr.getAllReadableCredentials(getUserAndRoles(), true);
     return new JsonResponse<>(Status.OK, creds).build();
   }
 

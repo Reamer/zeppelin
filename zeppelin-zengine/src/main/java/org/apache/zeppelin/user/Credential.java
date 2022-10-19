@@ -43,4 +43,7 @@ public class Credential extends UsernamePassword {
     return Optional.ofNullable(owners).orElse(Collections.emptySet());
   }
 
+  public static Credential credentialWithoutPassword(Credential orgCred) {
+    return new Credential(orgCred.getUsername(), null, orgCred.getReaders(), orgCred.getOwners());
+  }
 }
