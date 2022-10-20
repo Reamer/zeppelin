@@ -24,13 +24,15 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { CredentialRoutingModule } from './credential-routing.module';
 import { CredentialComponent } from './credential.component';
+import { CredentialPermissionSelectComponent } from './permissions/permissions.component';
 
 @NgModule({
-  declarations: [CredentialComponent],
+  declarations: [CredentialComponent, CredentialPermissionSelectComponent],
   imports: [
     CommonModule,
     CredentialRoutingModule,
@@ -45,6 +47,7 @@ import { CredentialComponent } from './credential.component';
     NzIconModule,
     NzDividerModule,
     NzInputModule,
+    NzSelectModule,
     NzTableModule,
     NzPopconfirmModule,
     NzGridModule,

@@ -12,7 +12,6 @@
 
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-
 import { CredentialForm } from '@zeppelin/interfaces';
 import { CredentialService, InterpreterService, TicketService } from '@zeppelin/services';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -35,6 +34,7 @@ export class CredentialComponent {
   editFlags: Map<string, CredentialForm> = new Map();
   credentialFormArray: UntypedFormArray = this.fb.array([]);
   docsLink: string;
+  defaultOwners: string[];
 
   get credentialControls(): UntypedFormGroup[] {
     return this.credentialFormArray.controls as UntypedFormGroup[];
@@ -52,10 +52,14 @@ export class CredentialComponent {
     this.docsLink = `https://zeppelin.apache.org/docs/${version}/setup/security/datasource_authorization.html`;
     this.getCredentials();
     this.getInterpreterNames();
+    const ticket = this.ticketService.originTicket;
+    this.defaultOwners = ticket.ticket === 'anonymous' ? [] : [ticket.principal];
     this.addForm = this.fb.group({
       entity: [null, [Validators.required]],
       username: [null, [Validators.required]],
-      password: [null, [Validators.required]]
+      password: [null, [Validators.required]],
+      owners: [this.defaultOwners, []],
+      readers: [[], []]
     });
   }
 
@@ -143,13 +147,15 @@ export class CredentialComponent {
 
   getCredentials() {
     this.credentialService.getCredentials().subscribe(data => {
-      const controls = [...Object.entries(data.userCredentials)].map(e => {
+      const controls = [...Object.entries(data)].map(e => {
         const entity = e[0];
-        const { username, password } = e[1];
+        const { username, password, owners, readers } = e[1];
         return this.fb.group({
           entity: [entity, [Validators.required]],
           username: [username, [Validators.required]],
-          password: [password, [Validators.required]]
+          password: [password, [Validators.required]],
+          owners: [owners, []],
+          readers: [readers, []]
         });
       });
       this.credentialFormArray = this.fb.array(controls);
@@ -188,8 +194,16 @@ export class CredentialComponent {
     this.addForm.reset({
       entity: null,
       username: null,
-      password: null
+      password: null,
+      owners: this.defaultOwners,
+      readers: []
     });
     this.cdr.markForCheck();
+  }
+
+  permissionSelect(form: UntypedFormGroup, field: string, value: string[]) {
+    const obj: Record<string, string[]> = {};
+    obj[field] = value;
+    form.patchValue(obj);
   }
 }

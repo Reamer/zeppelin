@@ -11,18 +11,20 @@
  */
 
 export interface Credential {
-  userCredentials: {
-    [key: string]: CredentialItem;
-  };
+  [key: string]: CredentialItem;
 }
 
 export interface CredentialItem {
   username: string;
   password: string;
+  readers: string[];
+  owners: string[];
 }
 
 export interface CredentialForm {
   entity: string;
   password: string;
   username: string;
+  readers: string[];
+  owners: string[];
 }
