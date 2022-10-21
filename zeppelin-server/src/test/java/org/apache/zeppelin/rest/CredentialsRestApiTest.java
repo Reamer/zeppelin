@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.server.JsonResponse;
 import org.apache.zeppelin.service.AuthenticationService;
 import org.apache.zeppelin.service.NoAuthenticationService;
@@ -51,7 +52,9 @@ public class CredentialsRestApiTest {
 
   @Before
   public void setUp() throws IOException {
-    credentials = new CredentialsMgr();
+    ZeppelinConfiguration zconf = mock(ZeppelinConfiguration.class);
+    when(zconf.credentialsPersist()).thenReturn(false);
+    credentials = new CredentialsMgr(zconf);
     authenticationService = new NoAuthenticationService();
     credentialRestApi = new CredentialRestApi(credentials, authenticationService);
   }

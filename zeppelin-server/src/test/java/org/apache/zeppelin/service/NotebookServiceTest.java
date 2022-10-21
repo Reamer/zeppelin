@@ -115,7 +115,7 @@ public class NotebookServiceTest {
     when(mockInterpreterSetting.isUserAuthorized(any())).thenReturn(true);
     when(mockInterpreterGroup.getInterpreterSetting()).thenReturn(mockInterpreterSetting);
     when(mockInterpreterSetting.getStatus()).thenReturn(InterpreterSetting.Status.READY);
-    CredentialsMgr credentials = new CredentialsMgr();
+    CredentialsMgr credentials = new CredentialsMgr(zeppelinConfiguration);
     NoteManager noteManager = new NoteManager(notebookRepo, zeppelinConfiguration);
     AuthorizationService authorizationService = new AuthorizationService(noteManager, zeppelinConfiguration);
     notebook =

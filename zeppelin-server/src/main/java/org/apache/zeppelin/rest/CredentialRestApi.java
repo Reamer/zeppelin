@@ -77,11 +77,7 @@ public class CredentialRestApi extends AbstractRestApi {
       if (credOld != null && !credentialsMgr.isOwner(request.getEntity(), getUserAndRoles())) {
         return new JsonResponse<>(Status.FORBIDDEN).build();
       }
-      // Make sure, that the user who creates the new credential entity is also owner
-      Set<String> owners = new HashSet<>();
-      owners.add(user);
-      owners.addAll(request.getOwners());
-      Credential credNew = new Credential(request.getUsername(), request.getPassword(), request.getReader(), owners);
+      Credential credNew = new Credential(request.getUsername(), request.getPassword(), request.getReader(), request.getOwners());
       credentialsMgr.putCredentialsEntity(request.getEntity(), credNew);
       return new JsonResponse<>(Status.OK).build();
     } catch (IOException e) {

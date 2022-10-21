@@ -20,13 +20,13 @@ package org.apache.zeppelin.user;
 
 import java.io.IOException;
 import java.util.Map.Entry;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.notebook.AuthorizationService;
 import org.apache.zeppelin.storage.ConfigStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +41,12 @@ public class CredentialsMgr {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CredentialsMgr.class);
 
+  private final ZeppelinConfiguration conf;
+
   private ConfigStorage storage;
   private Credentials credentials;
   private final Gson gson;
-  private Encryptor encryptor;
+  private final Encryptor encryptor;
 
   /**
    * Wrapper for user credentials. It can load credentials from a file
@@ -54,41 +56,28 @@ public class CredentialsMgr {
    * @throws IOException
    */
   public CredentialsMgr(ZeppelinConfiguration conf) {
+    this.conf = conf;
     credentials = new Credentials();
+    GsonBuilder builder = new GsonBuilder();
+    builder.setPrettyPrinting();
+    this.gson = builder.create();
+    String encryptKey = conf.getCredentialsEncryptKey();
+    if (StringUtils.isNotBlank(encryptKey)) {
+      this.encryptor = new Encryptor(encryptKey);
+    } else {
+      this.encryptor = null;
+    }
     if (conf.credentialsPersist()) {
-      String encryptKey = conf.getCredentialsEncryptKey();
-      if (StringUtils.isNotBlank(encryptKey)) {
-        this.encryptor = new Encryptor(encryptKey);
-      }
-      GsonBuilder builder = new GsonBuilder();
-      builder.setPrettyPrinting();
-      gson = builder.create();
       try {
         storage = ConfigStorage.getInstance(conf);
         loadFromFile();
       } catch (IOException e) {
         LOGGER.error("Fail to create ConfigStorage for Credentials. Persistenz will be disabled", e);
-        encryptor = null;
         storage = null;
       }
     } else {
-      encryptor = null;
       storage = null;
-      gson = null;
     }
-  }
-
-  /**
-   * Wrapper for inmemory user credentials.
-   *
-   * @param conf
-   * @throws IOException
-   */
-  public CredentialsMgr() {
-    credentials = new Credentials();
-    encryptor = null;
-    storage = null;
-    gson = null;
   }
 
   public UsernamePasswords getAllUsernamePasswords(Set<String> userAndRoles) {
@@ -121,25 +110,15 @@ public class CredentialsMgr {
     return sharedCreds;
   }
 
-  public static boolean isReader(Credential cred, Set<String> userAndRoles) {
-    return isMember(cred.getReaders(), userAndRoles) || isOwner(cred, userAndRoles);
+  public boolean isReader(Credential cred, Set<String> userAndRoles) {
+    return AuthorizationService.isMember(userAndRoles, cred.getReaders())
+      || isOwner(cred, userAndRoles)
+      || AuthorizationService.isAdmin(userAndRoles, conf);
   }
 
-  public static boolean isOwner(Credential cred, Set<String> userAndRoles) {
-    return isMember(cred.getOwners(), userAndRoles);
-  }
-
-  /**
-   * Intersection of a and b
-   *
-   * @param Set of roles
-   * @param Set of roles
-   * @return true if (a intersection b) is non-empty
-   */
-  private static boolean isMember(Set<String> a, Set<String> b) {
-    Set<String> intersection = new HashSet<>(b);
-    intersection.retainAll(a);
-    return !intersection.isEmpty();
+  public boolean isOwner(Credential cred, Set<String> userAndRoles) {
+    return AuthorizationService.isMember(userAndRoles, cred.getOwners())
+      || AuthorizationService.isAdmin(userAndRoles, conf);
   }
 
   public boolean exists(String enitiy) {
@@ -148,7 +127,7 @@ public class CredentialsMgr {
 
   public boolean isOwner(String entity, Set<String> userAndRoles) {
     Credential cred = credentials.get(entity);
-    return isMember(cred.getOwners(), userAndRoles);
+    return isOwner(cred, userAndRoles);
   }
 
   public void putCredentialsEntity(String entity, Credential cred) throws IOException {

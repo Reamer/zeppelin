@@ -20,12 +20,16 @@ package org.apache.zeppelin.user;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,6 +45,20 @@ public class CredentialsMgrTest {
     GsonBuilder builder = new GsonBuilder();
     builder.setPrettyPrinting();
     gson = builder.create();
+  }
+
+  @Test
+  public void testDefaultProperty() throws IOException {
+    ZeppelinConfiguration zconf = mock(ZeppelinConfiguration.class);
+    when(zconf.credentialsPersist()).thenReturn(false);
+    CredentialsMgr credentials = new CredentialsMgr(zconf);
+    Credential up1 = new Credential("user2", "password", null, new HashSet<String>(Arrays.asList("user1")));
+    credentials.putCredentialsEntity("hive(vertica)", up1);
+    credentials.putCredentialsEntity("user1", up1);
+    UsernamePasswords uc2 = credentials.getAllUsernamePasswords(new HashSet<String>(Arrays.asList("user1")));
+    UsernamePassword up2 = uc2.getUsernamePassword("hive(vertica)");
+    assertEquals(up1.getUsername(), up2.getUsername());
+    assertEquals(up1.getPassword(), up2.getPassword());
   }
 
   @Test

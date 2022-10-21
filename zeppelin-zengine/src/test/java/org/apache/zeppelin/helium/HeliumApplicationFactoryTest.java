@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
@@ -70,7 +69,7 @@ public class HeliumApplicationFactoryTest extends AbstractInterpreterTest {
             new NoteManager(notebookRepo, ZeppelinConfiguration.create()),
             interpreterFactory,
             interpreterSettingManager,
-            new CredentialsMgr());
+            new CredentialsMgr(conf));
 
     heliumAppFactory = new HeliumApplicationFactory(notebook, null);
 
