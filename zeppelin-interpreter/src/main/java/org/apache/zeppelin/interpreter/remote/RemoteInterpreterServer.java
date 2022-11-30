@@ -223,7 +223,11 @@ public class RemoteInterpreterServer extends Thread
   }
 
   @Override
-  public void shutdown() throws InterpreterRPCException, TException {
+  public synchronized void shutdown() throws InterpreterRPCException, TException {
+    if (shutdownThread != null && shutdownThread.isAlive()) {
+      LOGGER.info("Shutdown still in progress");
+      return;
+    }
     // unRegisterInterpreterProcess should be a sync operation (outside of shutdown thread),
     // otherwise it would cause data mismatch between zeppelin server & interpreter process.
     // e.g. zeppelin server start a new interpreter process, while previous interpreter process
@@ -244,9 +248,8 @@ public class RemoteInterpreterServer extends Thread
         LOGGER.warn("The ShutdownHook could not be removed");
       }
     }
-
-    Thread shutDownThread = new ShutdownThread(ShutdownThread.CAUSE_SHUTDOWN_CALL);
-    shutDownThread.start();
+    shutdownThread = new ShutdownThread(ShutdownThread.CAUSE_SHUTDOWN_CALL);
+    shutdownThread.start();
   }
 
   public ZeppelinConfiguration getConf() {
