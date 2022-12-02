@@ -132,14 +132,20 @@ public abstract class ProcessLauncher implements ExecuteResultHandler {
   @Override
   public void onProcessFailed(ExecuteException e) {
     LOGGER.warn("Process with cmd {} is failed due to", commandLine, e);
-    LOGGER.warn("ErrorMessage: {}", getErrorMessage());
+    LOGGER.warn("ErrorMessage: \n{}", getErrorMessage());
     errorMessage = ExceptionUtils.getStackTrace(e);
     transition(State.TERMINATED);
   }
 
   public String getErrorMessage() {
     if (!StringUtils.isBlank(processOutput.getProcessExecutionOutput())) {
-      return processOutput.getProcessExecutionOutput();
+      StringBuilder output = new StringBuilder();
+      output.append("-------------------");
+      output.append(System.lineSeparator());
+      output.append(processOutput.getProcessExecutionOutput());
+      output.append(System.lineSeparator());
+      output.append("-------------------");
+      return output.toString();
     } else {
       return this.errorMessage;
     }
