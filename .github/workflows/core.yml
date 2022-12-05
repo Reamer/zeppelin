@@ -258,16 +258,6 @@ jobs:
           key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-zeppelin-
-      - name: install environment for flink before 1.15 (exclusive)
-        if: matrix.flink != '115'
-        run: |
-          ./mvnw install -DskipTests -am -pl flink/flink-scala-2.11,flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration ${MAVEN_ARGS}
-          ./mvnw clean package -pl zeppelin-plugins -amd -DskipTests ${MAVEN_ARGS}
-      - name: install environment for flink after 1.15 (inclusive)
-        if: matrix.flink == '115'
-        run: |
-          ./mvnw install -DskipTests -am -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration ${MAVEN_ARGS}
-          ./mvnw clean package -pl zeppelin-plugins -amd -DskipTests ${MAVEN_ARGS}
       - name: Setup conda environment with python 3.7 and
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -281,10 +271,10 @@ jobs:
           use-mamba: true
       - name: run tests for flink before 1.15 (exclusive)
         if: matrix.flink != '115'
-        run: ./mvnw test -pl flink/flink-scala-2.11,flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
+        run: ./mvnw install -am -pl flink/flink-scala-2.11,flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
       - name: run tests for flink before 1.15 (inclusive)
         if: matrix.flink == '115'
-        run: ./mvnw test -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
+        run: ./mvnw install -am -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Phadoop2 -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test,FlinkIntegrationTest${{ matrix.flink }} ${MAVEN_ARGS}
       - name: Print zeppelin logs
         if: always()
         run: if [ -d "logs" ]; then cat logs/*; fi
