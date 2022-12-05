@@ -23,6 +23,7 @@ import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.submarine.commons.SubmarineConstants;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class PySubmarineInterpreterTest extends BaseInterpreterTest {
   }
 
   @Test
+  @Ignore("YarnClient can only handle kerberos request, but we have a simple as auth type")
   public void testTensorflow() throws InterpreterException {
     String callTensorflowFunc = "import tensorflow as tf\n" +
         "print('Installed TensorFlow version:' + tf.__version__)";
