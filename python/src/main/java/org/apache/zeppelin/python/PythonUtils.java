@@ -27,7 +27,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Properties;
 
 public class PythonUtils {
@@ -39,11 +38,10 @@ public class PythonUtils {
                                                   int port,
                                                   String secretKey,
                                                   boolean useAuth) throws IOException {
-    LOGGER.info("Launching GatewayServer at " + serverAddress + ":" + port +
-        ", useAuth: " + useAuth);
+    LOGGER.info("Launching GatewayServer at {}:{}, useAuth: {}", serverAddress, port, useAuth);
     if (useAuth) {
       try {
-        Class clz = Class.forName("py4j.GatewayServer$GatewayServerBuilder", true,
+        Class<?> clz = Class.forName("py4j.GatewayServer$GatewayServerBuilder", true,
             Thread.currentThread().getContextClassLoader());
         Object builder = clz.getConstructor(Object.class).newInstance(entryPoint);
         builder.getClass().getMethod("authToken", String.class).invoke(builder, secretKey);
@@ -65,7 +63,7 @@ public class PythonUtils {
           InetAddress.getByName(serverAddress),
           GatewayServer.DEFAULT_CONNECT_TIMEOUT,
           GatewayServer.DEFAULT_READ_TIMEOUT,
-          (List) null);
+          null);
     }
   }
 
