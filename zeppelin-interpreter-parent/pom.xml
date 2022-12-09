@@ -135,7 +135,6 @@
                 <exclude>org.apache.zeppelin:zeppelin-interpreter-shaded</exclude>
               </excludes>
             </artifactSet>
-            <outputFile>${project.basedir}/../interpreter/${interpreter.name}/${project.artifactId}-${project.version}.jar</outputFile>
           </configuration>
           <executions>
             <execution>
@@ -148,6 +147,7 @@
         </plugin>
 
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <executions>
             <execution>
@@ -162,7 +162,29 @@
             </execution>
           </executions>
         </plugin>
-
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>copy-shaded-interpreter</id>
+              <phase>pre-integration-test</phase>
+              <goals>
+                <goal>copy</goal>
+              </goals>
+              <configuration>
+                <artifactItems>
+                  <artifactItem>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>${project.artifactId}</artifactId>
+                    <version>${project.version}</version>
+                  </artifactItem>
+                </artifactItems>
+                <outputDirectory>${project.basedir}/../interpreter/${interpreter.name}/</outputDirectory>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
