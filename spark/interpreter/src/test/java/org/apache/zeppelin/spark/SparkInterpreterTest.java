@@ -49,8 +49,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
-
-public class SparkInterpreterTest {
+abstract public class SparkInterpreterTest {
 
   private SparkInterpreter interpreter;
 
@@ -64,6 +63,9 @@ public class SparkInterpreterTest {
   @Before
   public void setUp() {
     mockRemoteEventClient = mock(RemoteInterpreterEventClient.class);
+  }
+
+  public SparkInterpreterTest() {
   }
 
   @Test

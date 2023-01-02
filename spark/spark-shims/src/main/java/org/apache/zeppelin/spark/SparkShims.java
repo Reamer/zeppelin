@@ -67,7 +67,7 @@ public abstract class SparkShims {
       throw new Exception("Spark major version: '" + sparkMajorVersion + "' is not supported yet");
     }
 
-    Constructor c = sparkShimsClass.getConstructor(Properties.class, Object.class);
+    Constructor<?> c = sparkShimsClass.getConstructor(Properties.class, Object.class);
     return (SparkShims) c.newInstance(properties, entryPoint);
   }
 

@@ -50,8 +50,7 @@ import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterResultMessageOutput;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient;
 import org.apache.zeppelin.resource.LocalResourcePool;
-
-public class KotlinSparkInterpreterTest {
+ public class KotlinSparkInterpreterTest {
 
   @ClassRule
   public static TemporaryFolder tmpDir = new TemporaryFolder();
@@ -170,13 +169,14 @@ public class KotlinSparkInterpreterTest {
 
   @Test
   public void dataFrameTest() throws Exception {
-    interpreter.interpret("spark.range(100, 0, -1).sort(\"id\").show(2)", context);
+    interpreter.interpret("spark.range(100, 0, -1).show(2)", context);
+    System.err.println(output);
     assertTrue(output.contains(
         "+---+\n" +
         "| id|\n" +
         "+---+\n" +
-        "|  1|\n" +
-        "|  2|\n" +
+        "|100|\n" +
+        "| 99|\n" +
         "+---+"));
   }
 

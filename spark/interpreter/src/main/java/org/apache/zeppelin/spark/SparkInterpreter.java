@@ -170,13 +170,19 @@ public class SparkInterpreter extends AbstractInterpreter {
             // otherwise, load from the specific folder ZEPPELIN_HOME/interpreter/spark/scala-<version>
             File scalaJarFolder = new File(zeppelinHome + "/interpreter/spark/scala-" + scalaVersion);
             List<URL> urls = new ArrayList<>();
+            LOGGER.info("ZEPPELIN_HOME: {}", zeppelinHome);
             for (File file : scalaJarFolder.listFiles()) {
-              LOGGER.debug("Add file " + file.getAbsolutePath() + " to classpath of spark scala interpreter: "
-                      + scalaJarFolder);
+              LOGGER.debug("Add file {} to classpath of spark scala interpreter: {}",
+                file.getAbsolutePath(), scalaJarFolder);
               urls.add(file.toURI().toURL());
             }
-            scalaInterpreterClassLoader = new URLClassLoader(urls.toArray(new URL[0]),
+            if (!urls.isEmpty()) {
+              LOGGER.info("Using URLClassLoader");
+              scalaInterpreterClassLoader = new URLClassLoader(urls.toArray(new URL[0]),
                     Thread.currentThread().getContextClassLoader());
+            } else {
+              LOGGER.info("Using ContextClassLoader");
+            }
           }
           String innerIntpClassName = innerInterpreterClassMap.get(scalaVersion);
           innerInterpreterClazz = scalaInterpreterClassLoader.loadClass(innerIntpClassName);
@@ -232,6 +238,7 @@ public class SparkInterpreter extends AbstractInterpreter {
     return innerInterpreter.getProgress(context);
   }
 
+  @Override
   public ZeppelinContext getZeppelinContext() {
     if (this.innerInterpreter == null) {
       throw new RuntimeException("innerInterpreterContext is null");
@@ -276,7 +283,7 @@ public class SparkInterpreter extends AbstractInterpreter {
     } else {
       scalaVersionString = scala.util.Properties.versionString();
     }
-    LOGGER.info("Using Scala: " + scalaVersionString);
+    LOGGER.info("Using Scala: {}", scalaVersionString);
 
     if (StringUtils.isEmpty(scalaVersionString)) {
       throw new InterpreterException("Scala Version is empty");

@@ -146,7 +146,7 @@
           </executions>
         </plugin>
 
-        <plugin>
+<!--         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <executions>
@@ -196,7 +196,7 @@
               </fileset>
             </filesets>
           </configuration>
-        </plugin>
+        </plugin> -->
 
       </plugins>
     </pluginManagement>

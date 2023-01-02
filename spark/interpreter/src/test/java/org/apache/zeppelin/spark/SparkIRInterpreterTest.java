@@ -45,7 +45,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class SparkIRInterpreterTest extends IRInterpreterTest {
+abstract public class SparkIRInterpreterTest extends IRInterpreterTest {
 
   private RemoteInterpreterEventClient mockRemoteIntpEventClient = mock(RemoteInterpreterEventClient.class);
 

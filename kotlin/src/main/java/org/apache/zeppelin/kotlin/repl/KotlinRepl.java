@@ -125,6 +125,7 @@ public class KotlinRepl {
    * @return result of interpretation
    */
   public InterpreterResult eval(String code) {
+    logger.error("Code: {}", code);
     ReplCompileResult compileResult = compiler.compile(state,
         new ReplCodeLine(counter.getAndIncrement(), 0, code));
 

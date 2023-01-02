@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 
-public class PySparkInterpreterTest extends PythonInterpreterTest {
+public abstract class PySparkInterpreterTest extends PythonInterpreterTest {
 
   private RemoteInterpreterEventClient mockRemoteEventClient = mock(RemoteInterpreterEventClient.class);
 
