@@ -24,17 +24,18 @@ import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.repo.storage.RemoteStorageOperator;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class OSSNotebookRepoTest {
 
@@ -46,7 +47,7 @@ public class OSSNotebookRepoTest {
 
 
 
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     bucket = "zeppelin-test-bucket";
     String endpoint = "yourEndpoint";
@@ -70,7 +71,7 @@ public class OSSNotebookRepoTest {
     notebookRepo.setOssOperator(ossOperator);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws InterruptedException, IOException {
     ossOperator.deleteDir(bucket, "");
     ossOperator.deleteBucket(bucket);

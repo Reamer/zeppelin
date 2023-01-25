@@ -30,9 +30,9 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +63,7 @@ public class GitHubNotebookRepoTest {
   private RevCommit firstCommitRevision;
   private Git remoteGit;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     conf = ZeppelinConfiguration.create();
 
@@ -118,7 +118,7 @@ public class GitHubNotebookRepoTest {
     gitHubNotebookRepo.init(conf);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     // Cleanup the temporary folders uses as Git repositories
     File[] temporaryFolders = { remoteZeppelinDir, localZeppelinDir };

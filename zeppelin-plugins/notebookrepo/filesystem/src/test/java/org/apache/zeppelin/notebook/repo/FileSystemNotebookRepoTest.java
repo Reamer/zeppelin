@@ -26,9 +26,9 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FileSystemNotebookRepoTest {
 
@@ -48,7 +48,7 @@ public class FileSystemNotebookRepoTest {
   private String notebookDir;
   private AuthenticationInfo authInfo = AuthenticationInfo.ANONYMOUS;
 
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     notebookDir = Files.createTempDirectory("FileSystemNotebookRepoTest").toFile().getAbsolutePath();
     zConf = ZeppelinConfiguration.create();
@@ -59,7 +59,7 @@ public class FileSystemNotebookRepoTest {
     hdfsNotebookRepo.init(zConf);
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws IOException {
     FileUtils.deleteDirectory(new File(notebookDir));
   }
