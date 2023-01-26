@@ -21,14 +21,12 @@ import static org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars.ZEPPELIN_N
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Map;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.runtime.Network;
+import de.flapdoodle.embed.mongo.transitions.Mongod;
+import de.flapdoodle.embed.mongo.transitions.RunningMongodProcess;
+import de.flapdoodle.reverse.TransitionWalker;
+
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
@@ -38,9 +36,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MongoNotebookRepoTest {
+class MongoNotebookRepoTest {
 
-  private MongodExecutable mongodExecutable;
+  private TransitionWalker.ReachedState<RunningMongodProcess> mongodExecutable;
 
   private ZeppelinConfiguration zConf;
 
@@ -48,20 +46,10 @@ public class MongoNotebookRepoTest {
 
   @BeforeEach
   public void setUp() throws IOException {
-    String bindIp = "localhost";
-    ServerSocket socket = new ServerSocket(0);
-    int port = socket.getLocalPort();
-    socket.close();
-
-    MongodConfig mongodConfig = MongodConfig.builder()
-        .version(Version.Main.PRODUCTION)
-        .net(new Net(bindIp, port, Network.localhostIsIPv6()))
-        .build();
-
-    mongodExecutable = MongodStarter.getDefaultInstance()
-        .prepare(mongodConfig);
-    mongodExecutable.start();
-
+    TransitionWalker.ReachedState<RunningMongodProcess> mongodExecutable =
+        Mongod.instance().start(Version.Main.PRODUCTION);
+    int port = mongodExecutable.current().getServerAddress().getPort();
+    String bindIp = mongodExecutable.current().getServerAddress().getHost();
     System.setProperty(ZEPPELIN_NOTEBOOK_MONGO_URI.getVarName(), "mongodb://" + bindIp + ":" + port);
     zConf = ZeppelinConfiguration.create();
     notebookRepo = new MongoNotebookRepo();
@@ -71,12 +59,12 @@ public class MongoNotebookRepoTest {
   @AfterEach
   public void tearDown() throws IOException {
     if (mongodExecutable != null) {
-      mongodExecutable.stop();
+      mongodExecutable.close();
     }
   }
 
   @Test
-  public void testBasics() throws IOException {
+  void testBasics() throws IOException {
     assertEquals(0, notebookRepo.list(AuthenticationInfo.ANONYMOUS).size());
 
     // create note1
@@ -128,7 +116,7 @@ public class MongoNotebookRepoTest {
   }
 
   @Test
-  public void testGetNotePath() throws IOException {
+  void testGetNotePath() throws IOException {
     assertEquals(0, notebookRepo.list(AuthenticationInfo.ANONYMOUS).size());
 
     Note note = new Note();
