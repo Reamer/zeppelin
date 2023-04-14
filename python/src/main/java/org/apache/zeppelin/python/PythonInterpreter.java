@@ -43,6 +43,7 @@ import py4j.GatewayServer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
@@ -561,7 +562,8 @@ public class PythonInterpreter extends Interpreter {
   protected void bootstrapInterpreter(String resourceName) throws IOException {
     LOGGER.info("Bootstrap interpreter via {}", resourceName);
     String bootstrapCode =
-        IOUtils.toString(getClass().getClassLoader().getResourceAsStream(resourceName));
+        IOUtils.toString(getClass().getClassLoader().getResourceAsStream(resourceName),
+            StandardCharsets.UTF_8);
     try {
       if (iPythonInterpreter != null) {
         InterpreterResult result = iPythonInterpreter.interpret(bootstrapCode,

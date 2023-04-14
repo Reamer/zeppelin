@@ -23,11 +23,9 @@ import org.slf4j.LoggerFactory;
 import py4j.GatewayServer;
 
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Properties;
 
 public class PythonUtils {
@@ -39,11 +37,10 @@ public class PythonUtils {
                                                   int port,
                                                   String secretKey,
                                                   boolean useAuth) throws IOException {
-    LOGGER.info("Launching GatewayServer at " + serverAddress + ":" + port +
-        ", useAuth: " + useAuth);
+    LOGGER.info("Launching GatewayServer at {}:{}, useAuth: {}", serverAddress, port, useAuth);
     if (useAuth) {
       try {
-        Class clz = Class.forName("py4j.GatewayServer$GatewayServerBuilder", true,
+        Class<?> clz = Class.forName("py4j.GatewayServer$GatewayServerBuilder", true,
             Thread.currentThread().getContextClassLoader());
         Object builder = clz.getConstructor(Object.class).newInstance(entryPoint);
         builder.getClass().getMethod("authToken", String.class).invoke(builder, secretKey);
@@ -65,21 +62,21 @@ public class PythonUtils {
           InetAddress.getByName(serverAddress),
           GatewayServer.DEFAULT_CONNECT_TIMEOUT,
           GatewayServer.DEFAULT_READ_TIMEOUT,
-          (List) null);
+          null);
     }
   }
 
   public static String getLocalIP(Properties properties) {
     // zeppelin.python.gatewayserver_address is only for unit test.
     // Because the FQDN would fail unit test.
-    String gatewayserver_address =
+    String gatewayserverAddress =
         properties.getProperty("zeppelin.python.gatewayserver_address");
-    if (gatewayserver_address != null) {
-      return gatewayserver_address;
+    if (gatewayserverAddress != null) {
+      return gatewayserverAddress;
     }
 
     try {
-      return Inet4Address.getLocalHost().getHostAddress();
+      return InetAddress.getLocalHost().getHostAddress();
     } catch (UnknownHostException e) {
       LOGGER.warn("can't get local IP", e);
     }

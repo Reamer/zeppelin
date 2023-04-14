@@ -24,8 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
 /**
@@ -33,7 +31,7 @@ import java.util.Properties;
  */
 class Utils {
   private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
-  private static String DEPRECATED_MESSAGE =
+  private static final String DEPRECATED_MESSAGE =
           "%html <font color=\"red\">Spark lower than 2.2 is deprecated, " +
           "if you don't want to see this message, please set " +
           "zeppelin.spark.deprecateMsg.show to false.</font>";
