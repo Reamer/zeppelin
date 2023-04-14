@@ -34,6 +34,8 @@ import org.apache.zeppelin.kotlin.KotlinInterpreter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.Tuple2;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -122,7 +124,13 @@ public class SparkInterpreter extends AbstractInterpreter {
                   masterEnv == null ? SparkStringConstants.DEFAULT_MASTER_VALUE : masterEnv);
         }
       }
+
       this.innerInterpreter = loadSparkScalaInterpreter(conf);
+      LOGGER.info("Start Spark-Config");
+      for (Tuple2<String, String> config : conf.getAll()) {
+        LOGGER.info("{}={}", config._1, config._2);
+      }
+      LOGGER.info("End Spark-Config");
       this.innerInterpreter.open();
 
       sc = this.innerInterpreter.getSparkContext();

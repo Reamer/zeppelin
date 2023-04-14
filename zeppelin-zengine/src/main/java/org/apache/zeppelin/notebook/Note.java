@@ -768,8 +768,8 @@ public class Note implements JsonSerializable {
           }
           // Must run each paragraph in blocking way.
           if (!run(p.getId(), true)) {
-            LOGGER.warn("Skip running the remain notes because paragraph {} fails", p.getId());
-            return;
+            LOGGER.warn("Skip the rest of the paragraphs because paragraph {} fails", p.getId());
+            break;
           }
         } catch (InterpreterNotFoundException e) {
           p.setInterpreterNotFound(e);

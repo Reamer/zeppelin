@@ -45,7 +45,6 @@ import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreter;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreterProcess;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreterProcessListener;
-import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.plugin.PluginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -829,8 +828,10 @@ public class InterpreterSetting {
       } else {
         interpreters.add(interpreter);
       }
-      LOGGER.info("Interpreter {} created for user: {}, sessionId: {}",
-          interpreter.getClassName(), user, sessionId);
+      LOGGER.info(
+          "Interpreter {} created for user: {}, sessionId: {}, interpreterGroupId: {}, default: {}",
+          interpreter.getClassName(), user, sessionId, interpreterGroupId,
+          info.isDefaultInterpreter());
     }
 
     // TODO(zjffdu) this kind of hardcode is ugly. For now SessionConfInterpreter is used
