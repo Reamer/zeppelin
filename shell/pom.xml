@@ -83,11 +83,17 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <!-- Use log4j-1.2-api instead -->
         <exclusion>
           <groupId>log4j</groupId>
           <artifactId>log4j</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-1.2-api</artifactId>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.hubspot.jinjava</groupId>

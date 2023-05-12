@@ -43,6 +43,12 @@
       <version>0.12.0-SNAPSHOT</version>
       <optional>true</optional>
     </dependency>
+    <!-- Logging lib for remote interpreter -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -51,15 +57,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <configuration>
-          <artifactSet>
-            <excludes>
-              <!-- Leave slf4j unshaded so downstream users can configure logging. -->
-              <exclude>org.slf4j:*</exclude>
-              <!-- Leave log4j unshaded so downstream users can configure logging. -->
-              <exclude>log4j:log4j</exclude>
-              <exclude>ch.qos.reload4j:reload4j</exclude>
-            </excludes>
-          </artifactSet>
           <filters>
             <filter>
               <artifact>*:*</artifact>
@@ -97,12 +94,18 @@
                 <exclude>org/apache/zeppelin/**/*</exclude>
                 <exclude>org/apache/hadoop/*</exclude>
                 <exclude>org/apache/hadoop/**</exclude>
+                <!-- slf4j-api -->
                 <exclude>org/slf4j/*</exclude>
                 <exclude>org/slf4j/**/*</exclude>
+                <!-- jcl-over-slf4j -->
                 <exclude>org/apache/commons/logging/*</exclude>
                 <exclude>org/apache/commons/logging/**/*</exclude>
+                <!-- log4j-slf4j-impl -->
+                <exclude>org/apache/logging/*</exclude>
+                <exclude>org/apache/logging/**/*</exclude>
                 <exclude>org/apache/commons/exec/*</exclude>
                 <exclude>org/apache/commons/exec/**/*</exclude>
+                <!-- log4j-1.2-api -->
                 <exclude>org/apache/log4j/*</exclude>
                 <exclude>org/apache/log4j/**/*</exclude>
                 <exclude>org/sonatype/*</exclude>
