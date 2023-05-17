@@ -162,7 +162,7 @@ class AppendOutputRunnerTest {
 
     String loggerString = "Processing size for buffered append-output is high: " +
         (data.length() * numEvents) + " characters.";
-    assertEquals(loggerString, sizeWarnLogEntry.getMessage());
+    assertEquals(loggerString, sizeWarnLogEntry.getRenderedMessage());
   }
 
   private class BombardEvents implements Runnable {
