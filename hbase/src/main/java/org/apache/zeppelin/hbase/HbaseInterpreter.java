@@ -77,8 +77,8 @@ public class HbaseInterpreter extends Interpreter {
       String rubySrc = getProperty(HBASE_RUBY_SRC);
       Path absRubySrc = Paths.get(hbaseHome, rubySrc).toAbsolutePath();
 
-      LOGGER.info("Home:" + hbaseHome);
-      LOGGER.info("Ruby Src:" + rubySrc);
+      LOGGER.info("Home:{}", hbaseHome);
+      LOGGER.info("Ruby Src:{}", rubySrc);
 
       File f = absRubySrc.toFile();
       if (!f.exists() || !f.isDirectory()) {
@@ -86,7 +86,7 @@ public class HbaseInterpreter extends Interpreter {
             + "'");
       }
 
-      LOGGER.info("Absolute Ruby Source:" + absRubySrc.toString());
+      LOGGER.info("Absolute Ruby Source:{}", absRubySrc.toString());
       // hirb.rb:41 requires the following system properties to be set.
       Properties sysProps = System.getProperties();
       sysProps.setProperty(HBASE_RUBY_SRC, absRubySrc.toString());
@@ -147,26 +147,5 @@ public class HbaseInterpreter extends Interpreter {
   public List<InterpreterCompletion> completion(String buf, int cursor,
       InterpreterContext interpreterContext) {
     return null;
-  }
-
-  private static String getSystemDefault(
-      String envName,
-      String propertyName,
-      String defaultValue) {
-
-    if (envName != null && !envName.isEmpty()) {
-      String envValue = System.getenv().get(envName);
-      if (envValue != null) {
-        return envValue;
-      }
-    }
-
-    if (propertyName != null && !propertyName.isEmpty()) {
-      String propValue = System.getProperty(propertyName);
-      if (propValue != null) {
-        return propValue;
-      }
-    }
-    return defaultValue;
   }
 }

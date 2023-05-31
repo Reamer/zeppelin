@@ -16,7 +16,6 @@ package org.apache.zeppelin.hbase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import java.util.Properties;
 
 import org.apache.zeppelin.interpreter.InterpreterException;
