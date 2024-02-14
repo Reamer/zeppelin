@@ -41,6 +41,7 @@
         <!--test library versions-->
         <livy.version>0.7.1-incubating</livy.version>
         <spark.version>2.4.8</spark.version>
+        <spark.hadoop.version>2.7</spark.hadoop.version>
         <hadoop.version>${hadoop2.7.version}</hadoop.version>
     </properties>
 
@@ -296,6 +297,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.zeppelin</groupId>
+            <artifactId>zeppelin-test-helper</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -308,6 +315,30 @@
             </plugin>
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.apache.zeppelin.livy.LivyITPrepare</mainClass>
+                    <arguments>
+                      <argument>${livy.version}</argument>
+                      <argument>${project.build.directory}/livy</argument>
+                      <argument>${spark.version}</argument>
+                      <argument>${spark.hadoop.version}</argument>
+                      <argument>${project.build.directory}/spark</argument>
+                    </arguments>
+                    <classpathScope>test</classpathScope>
+                </configuration>
+                <executions>
+                    <execution>
+                      <id>preIntegration</id>
+                      <phase>pre-integration-test</phase>
+                      <goals>
+                          <goal>java</goal>
+                      </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -326,6 +357,8 @@
                     <environmentVariables>
                         <LIVY_SPARK_SCALA_VERSION>${scala.binary.version}</LIVY_SPARK_SCALA_VERSION>
                         <LIVY_LOG_DIR>${project.build.directory}/tmp</LIVY_LOG_DIR>
+                        <SPARK_HOME>${project.build.directory}/spark</SPARK_HOME>
+                        <LIVY_HOME>${project.build.directory}/livy</LIVY_HOME>
                     </environmentVariables>
                     <argLine>-Xmx2048m</argLine>
                 </configuration>

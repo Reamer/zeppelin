@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.zeppelin.interpreter.integration;
+package org.apache.zeppelin.test.helper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +52,11 @@ public class SemanticVersion {
       this.minorVersion = Integer.parseInt(versions[1]);
       this.patchVersion = Integer.parseInt(versions[2]);
       // version is always 5 digits. (e.g. 2.0.0 -> 20000, 1.6.2 -> 10602)
-      version = Integer.parseInt(String.format("%d%02d%02d", majorVersion, minorVersion, patchVersion));
+      version =
+          Integer.parseInt(String.format("%d%02d%02d", majorVersion, minorVersion, patchVersion));
     } catch (Exception e) {
-      LOG.error("Can not recognize Spark version {}. Assume it's a future release", versionString, e);
+      LOG.error("Can not recognize Spark version {}. Assume it's a future release", versionString,
+          e);
       // assume it is future release
       version = 99999;
     }
@@ -85,7 +87,7 @@ public class SemanticVersion {
   @Override
   public boolean equals(Object versionToCompare) {
     return versionToCompare instanceof SemanticVersion
-            && version == ((SemanticVersion) versionToCompare).version;
+        && version == ((SemanticVersion) versionToCompare).version;
   }
 
   public boolean newerThan(SemanticVersion versionToCompare) {

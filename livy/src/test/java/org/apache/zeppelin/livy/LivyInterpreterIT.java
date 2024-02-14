@@ -55,7 +55,7 @@ public class LivyInterpreterIT {
   private static Properties properties;
 
   @BeforeAll
-  public static void setUp() {
+  public static void setUp() throws IOException {
     if (!checkPreCondition()) {
       return;
     }

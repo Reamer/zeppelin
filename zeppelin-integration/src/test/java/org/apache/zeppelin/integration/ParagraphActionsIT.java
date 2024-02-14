@@ -29,7 +29,7 @@ import org.apache.zeppelin.AbstractZeppelinIT;
 import org.apache.zeppelin.MiniZeppelinServer;
 import org.apache.zeppelin.WebDriverManager;
 import org.apache.zeppelin.ZeppelinITUtils;
-import org.apache.zeppelin.interpreter.integration.DownloadUtils;
+import org.apache.zeppelin.test.helper.DownloadUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

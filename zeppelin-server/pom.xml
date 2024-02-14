@@ -403,6 +403,12 @@
       <version>${xml.apis.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-test-helper</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
 
       <dependency>
         <groupId>org.bitbucket.cowwoc</groupId>
