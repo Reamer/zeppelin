@@ -92,7 +92,7 @@ public abstract class SparkIntegrationTest {
     zepServer.copyLogProperties();
     zepServer.getZeppelinConfiguration().setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_HELIUM_REGISTRY.getVarName(),
         "helium");
-    zepServer.start();
+    zepServer.start(false, SparkIntegrationTest.class.getSimpleName());
     interpreterSettingManager = zepServer.getServiceLocator().getService(InterpreterSettingManager.class);
     interpreterFactory = zepServer.getServiceLocator().getService(InterpreterFactory.class);
   }

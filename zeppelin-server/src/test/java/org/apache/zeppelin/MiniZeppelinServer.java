@@ -47,7 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MiniZeppelinServer implements AutoCloseable {
-  protected static final Logger LOG = LoggerFactory.getLogger(MiniZeppelinServer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MiniZeppelinServer.class);
 
   private final File zeppelinHome;
   private final File confDir;

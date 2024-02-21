@@ -20,12 +20,13 @@
   <parent>
     <groupId>org.apache.zeppelin</groupId>
     <artifactId>zeppelin</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
   </parent>
   <name>Zeppelin: Test Helper</name>
   <description>Zeppelin Test Helper</description>
   <artifactId>zeppelin-test-helper</artifactId>
-    <dependencies>
+  <packaging>jar</packaging>
+  <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
