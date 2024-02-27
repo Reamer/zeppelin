@@ -19,7 +19,7 @@ package org.apache.zeppelin.livy;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.livy.test.framework.Cluster;
-import org.apache.livy.test.framework.Cluster$;
+import org.apache.livy.test.framework.MiniCluster;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import scala.collection.immutable.HashMap;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +61,8 @@ public class LivyInterpreterIT {
     if (!checkPreCondition()) {
       return;
     }
-    cluster = Cluster$.MODULE$.get();
+    cluster = new MiniCluster(new HashMap<>());
+    cluster.deploy();
     LOGGER.info("Starting livy at {}", cluster.livyEndpoint());
     properties = new Properties();
     properties.setProperty("zeppelin.livy.url", cluster.livyEndpoint());
@@ -360,7 +363,6 @@ public class LivyInterpreterIT {
     if (!checkPreCondition()) {
       return;
     }
-
     final LivyPySparkInterpreter pysparkInterpreter = new LivyPySparkInterpreter(properties);
     pysparkInterpreter.setInterpreterGroup(mock(InterpreterGroup.class));
     AuthenticationInfo authInfo = new AuthenticationInfo("user1");
