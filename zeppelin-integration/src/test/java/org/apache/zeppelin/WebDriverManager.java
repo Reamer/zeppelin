@@ -83,6 +83,12 @@ public class WebDriverManager implements Closeable {
     Supplier<WebDriver> chromeDriverSupplier = () -> {
       try {
         ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new");
+        options.addArguments("test-type");
+        options.addArguments("disable-popup-blocking");
+        options.addArguments("ignore-certificate-errors");
+        options.addArguments("disable-translate");
+        options.addArguments("start-maximized");
         return new ChromeDriver(options);
       } catch (Exception e) {
         LOG.error("Exception in WebDriverManager while ChromeDriver ", e);
