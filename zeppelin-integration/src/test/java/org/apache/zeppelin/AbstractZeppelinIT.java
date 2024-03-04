@@ -19,13 +19,10 @@ package org.apache.zeppelin;
 
 
 import com.google.common.base.Function;
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.JavascriptExecutor;
@@ -207,8 +204,8 @@ abstract public class AbstractZeppelinIT {
 
   protected void handleException(String message, Exception e) throws Exception {
     LOG.error(message, e);
-    File scrFile = ((TakesScreenshot) manager.getWebDriver()).getScreenshotAs(OutputType.FILE);
-    LOG.error("ScreenShot::\ndata:image/png;base64," + new String(Base64.encodeBase64(FileUtils.readFileToByteArray(scrFile))));
+    String base64 = ((TakesScreenshot) manager.getWebDriver()).getScreenshotAs(OutputType.BASE64);
+    LOG.error("ScreenShot::\ndata:image/png;base64," + base64);
     throw e;
   }
 
