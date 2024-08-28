@@ -75,6 +75,9 @@ public abstract class AbstractScheduler implements Scheduler {
   }
 
   @Override
+  /**
+   * Do not remove the job from the queue, because the job is reseted during runJob
+   */
   public Job<?> cancel(String jobId) {
     Job<?> job = jobs.remove(jobId);
     job.abort();
@@ -121,6 +124,7 @@ public abstract class AbstractScheduler implements Scheduler {
    * @param runningJob
    */
   protected void runJob(Job<?> runningJob) {
+    LOGGER.info("Begin job {}", runningJob.getId());
     if (runningJob.isAborted()) {
       LOGGER.info("Job {} is aborted", runningJob.getId());
       runningJob.setStatus(Job.Status.ABORT);
@@ -129,10 +133,7 @@ public abstract class AbstractScheduler implements Scheduler {
     }
 
     LOGGER.info("Job {} started by scheduler {}", runningJob.getId(), name);
-    // Don't set RUNNING status when it is RemoteScheduler, update it via JobStatusPoller
-    if (!getClass().getSimpleName().equals("RemoteScheduler")) {
-      runningJob.setStatus(Job.Status.RUNNING);
-    }
+    runningJob.setStatus(Job.Status.RUNNING);
     runningJob.run();
     Object jobResult = runningJob.getReturn();
     synchronized (runningJob) {

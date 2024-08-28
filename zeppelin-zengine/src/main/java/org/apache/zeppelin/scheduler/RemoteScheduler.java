@@ -17,6 +17,7 @@
 
 package org.apache.zeppelin.scheduler;
 
+import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreter;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.util.ExecutorUtil;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -40,11 +42,51 @@ public class RemoteScheduler extends AbstractScheduler {
   private final ExecutorService executor;
 
   public RemoteScheduler(String name,
+                         ExecutorService executor,
                          RemoteInterpreter remoteInterpreter) {
     super(name);
-    this.executor =
-        Executors.newSingleThreadExecutor(new NamedThreadFactory("FIFO-" + name));
+    this.executor = executor;
     this.remoteInterpreter = remoteInterpreter;
+  }
+
+  /**
+   * This is the logic of running job.
+   * Subclass can use this method and can customize where and when to run this method.
+   *
+   * @param runningJob
+   */
+  @Override
+  protected void runJob(Job<?> runningJob) {
+    LOGGER.info("Begin job {}", runningJob.getId());
+    if (runningJob.isAborted() || runningJob.getStatus().equals(Job.Status.ABORT)) {
+      LOGGER.info("Job {} is aborted", runningJob.getId());
+      runningJob.setStatus(Job.Status.ABORT);
+      runningJob.aborted = false;
+      return;
+    }
+
+    LOGGER.info("Job {} started by scheduler {}", runningJob.getId(), name);
+    runningJob.run();
+    Object jobResult = runningJob.getReturn();
+    LOGGER.info("Jobresult {} for {}", jobResult, runningJob.getId());
+    synchronized (runningJob) {
+      if (runningJob.isAborted()) {
+        LOGGER.debug("Job Aborted, {}, {}", runningJob.getId(), runningJob.getErrorMessage());
+        runningJob.setStatus(Job.Status.ABORT);
+      } else if (runningJob.getException() != null || (jobResult instanceof InterpreterResult
+          && ((InterpreterResult) jobResult).code() == InterpreterResult.Code.ERROR)) {
+        LOGGER.debug("Job Error, {}, {}", runningJob.getId(), runningJob.getReturn());
+        runningJob.setStatus(Job.Status.ERROR);
+      } else {
+        LOGGER.debug("Job Finished, {}, Result: {}", runningJob.getId(), runningJob.getReturn());
+        runningJob.setStatus(Job.Status.FINISHED);
+      }
+    }
+    LOGGER.info("Job {} finished by scheduler {} with status {}", runningJob.getId(), name,
+        runningJob.getStatus());
+    // reset aborted flag to allow retry
+    runningJob.aborted = false;
+    jobs.remove(runningJob.getId());
   }
 
   @Override
@@ -52,34 +94,43 @@ public class RemoteScheduler extends AbstractScheduler {
     JobRunner jobRunner = new JobRunner(this, job);
     executor.execute(jobRunner);
     String executionMode =
-            remoteInterpreter.getProperty(".execution.mode", "paragraph");
+        remoteInterpreter.getProperty(".execution.mode", "paragraph");
     if (executionMode.equals("paragraph")) {
       // wait until it is submitted to the remote
-      while (!jobRunner.isJobSubmittedInRemote() && !Thread.currentThread().isInterrupted()) {
+      while (!jobRunner.getJobSubmittedInRemote().get()
+          && !Thread.currentThread().isInterrupted()) {
         try {
-          Thread.sleep(100);
+          LOGGER.info("Job {} not submitted", job.getId());
+          synchronized (jobRunner.getJobSubmittedInRemote()) {
+            jobRunner.getJobSubmittedInRemote().wait(10000);
+          }
         } catch (InterruptedException e) {
           LOGGER.error("Exception in RemoteScheduler while jobRunner.isJobSubmittedInRemote " +
-                  "queue.wait", e);
+              "queue.wait", e);
           // Restore interrupted state...
           Thread.currentThread().interrupt();
         }
       }
-    } else if (executionMode.equals("note")){
+      LOGGER.info("Job {} submitted", job.getId());
+    } else if (executionMode.equals("note")) {
       // wait until it is finished
-      while (!jobRunner.isJobExecuted() && !Thread.currentThread().isInterrupted()) {
+      while (!jobRunner.getJobExecuted().get() && !Thread.currentThread().isInterrupted()) {
         try {
-          Thread.sleep(100);
+          LOGGER.info("Job {} not executed", job.getId());
+          synchronized (jobRunner.getJobExecuted()) {
+            jobRunner.getJobExecuted().wait(10000);
+          }
         } catch (InterruptedException e) {
           LOGGER.error("Exception in RemoteScheduler while jobRunner.isJobExecuted " +
-                  "queue.wait", e);
+              "queue.wait", e);
           // Restore interrupted state...
           Thread.currentThread().interrupt();
         }
       }
+      LOGGER.info("Job {} executed", job.getId());
     } else {
       throw new RuntimeException("Invalid job execution.mode: " + executionMode +
-              ", only 'note' and 'paragraph' are valid");
+          ", only 'note' and 'paragraph' are valid");
     }
   }
 
@@ -87,73 +138,38 @@ public class RemoteScheduler extends AbstractScheduler {
    * Role of the class is getting status info from remote process from PENDING to
    * RUNNING status. This thread will exist after job is in RUNNING/FINISHED state.
    */
-  private class JobStatusPoller extends Thread {
-    private final Logger LOGGER = LoggerFactory.getLogger(JobRunner.class);
-    private final long checkIntervalMsec;
-    private final AtomicBoolean terminate;
+  private class JobStatusPoller implements Runnable {
     private final JobListener listener;
     private final Job<?> job;
-    private volatile Status lastStatus;
+    private Status lastStatus;
 
     public JobStatusPoller(Job<?> job,
-                           JobListener listener,
-                           long checkIntervalMsec) {
-      setName("JobStatusPoller-" + job.getId());
-      this.checkIntervalMsec = checkIntervalMsec;
+        JobListener listener) {
       this.job = job;
       this.listener = listener;
-      this.terminate = new AtomicBoolean(false);
+      lastStatus = Status.UNKNOWN;
     }
 
     @Override
     public void run() {
-      while (!terminate.get() && !Thread.currentThread().isInterrupted()) {
-        Status newStatus = getStatus();
-        if (newStatus == Status.RUNNING ||
-                newStatus == Status.FINISHED ||
-                newStatus == Status.ERROR ||
-                newStatus == Status.ABORT) {
-          // Exit this thread when job is in RUNNING/FINISHED/ERROR/ABORT state.
-          terminate.set(true);
-        } else {
-          synchronized (terminate) {
-            try {
-              terminate.wait(checkIntervalMsec);
-            } catch (InterruptedException e) {
-              LOGGER.error("Exception in RemoteScheduler while run this.wait", e);
-              // Restore interrupted state...
-              Thread.currentThread().interrupt();
-            }
-          }
-        }
-      }
-      terminate.set(true);
+      updateStatus();
     }
 
-    public void shutdown() {
-      synchronized (terminate) {
-        terminate.set(true);
-        terminate.notifyAll();
-      }
-    }
-
-    public Status getStatus() {
+    public void updateStatus() {
       if (!remoteInterpreter.isOpened()) {
-        if (lastStatus != null) {
-          return lastStatus;
-        } else {
-          return job.getStatus();
-        }
+        return;
       }
       Status status = Status.valueOf(remoteInterpreter.getStatus(job.getId()));
       if (status == Status.UNKNOWN) {
         // not found this job in the remote schedulers.
         // maybe not submitted, maybe already finished
-        return job.getStatus();
+        return;
       }
-      listener.onStatusChange(job, lastStatus, status);
-      lastStatus = status;
-      return status;
+      LOGGER.info("Status {} for {}", status, job.getId());
+      if (!lastStatus.equals(status)) {
+        listener.onStatusChange(job, lastStatus, status);
+        lastStatus = status;
+      }
     }
   }
 
@@ -161,74 +177,74 @@ public class RemoteScheduler extends AbstractScheduler {
     private final Logger LOGGER = LoggerFactory.getLogger(JobRunner.class);
     private final RemoteScheduler scheduler;
     private final Job<?> job;
-    private volatile boolean jobExecuted;
-    private volatile boolean jobSubmittedRemotely;
+    private final AtomicBoolean jobSubmittedRemotely;
+    private final AtomicBoolean jobExecuted;
+
+    private final ScheduledExecutorService jobStatusPoller;
 
     public JobRunner(RemoteScheduler scheduler, Job<?> job) {
+      this.jobStatusPoller = Executors
+          .newSingleThreadScheduledExecutor(
+              new NamedThreadFactory("JobStatusPoller-" + job.getId()));
       this.scheduler = scheduler;
       this.job = job;
-      jobExecuted = false;
-      jobSubmittedRemotely = false;
+      this.jobSubmittedRemotely = new AtomicBoolean(false);
+      this.jobExecuted = new AtomicBoolean(false);
     }
 
-    public boolean isJobSubmittedInRemote() {
+    public AtomicBoolean getJobSubmittedInRemote() {
       return jobSubmittedRemotely;
     }
 
-    public boolean isJobExecuted() {
+    public AtomicBoolean getJobExecuted() {
       return jobExecuted;
     }
 
     @Override
     public void run() {
-      JobStatusPoller jobStatusPoller = new JobStatusPoller(job, this, 100);
-      jobStatusPoller.start();
+      jobStatusPoller.scheduleAtFixedRate(new JobStatusPoller(job, this), 100, 100,
+          TimeUnit.MILLISECONDS);
+      LOGGER.info("Running job {}", job.getId());
       scheduler.runJob(job);
-      jobExecuted = true;
-      jobSubmittedRemotely = true;
-      jobStatusPoller.shutdown();
-      try {
-        jobStatusPoller.join();
-      } catch (InterruptedException e) {
-        LOGGER.error("JobStatusPoller interrupted", e);
-        // Restore interrupted state...
-        Thread.currentThread().interrupt();
+      jobExecuted.set(true);
+      synchronized (jobExecuted) {
+        jobExecuted.notifyAll();
       }
+      jobSubmittedRemotely.set(true);
+      synchronized (jobSubmittedRemotely) {
+        jobSubmittedRemotely.notifyAll();
+      }
+      LOGGER.info("Shutdown of JobStatusPoller-{}", job.getId());
+      ExecutorUtil.softShutdown("JobStatusPoller-" + job.getId(), jobStatusPoller, 2,
+          TimeUnit.SECONDS);
     }
 
     @Override
     public void onProgressUpdate(Job<?> job, int progress) {
     }
 
-    // Call by JobStatusPoller thread, update status when JobStatusPoller get new status.
+    // Call by JobStatusPoller, update status when JobStatusPoller get new status.
     @Override
     public void onStatusChange(Job<?> job, Status before, Status after) {
-      if (!job.equals(this.job)) {
-        LOGGER.error("StatusChange for an unkown job. {} != {}", this.job.getId(), job.getId());
-        return;
-      }
-      if (!jobExecuted) {
-        if (after == Status.FINISHED || after == Status.ABORT
-                || after == Status.ERROR) {
+      LOGGER.info("Status-Change {} from {} to {}", job.getId(), before, after);
+      if (jobExecuted.get()) {
+        if (after.isCompleted()) {
           // it can be status of last run.
           // so not updating the remoteStatus
           return;
-        } else if (after == Status.RUNNING) {
-          jobSubmittedRemotely = true;
-          this.job.setStatus(Status.RUNNING);
+        } else if (after.isRunning()) {
+          jobSubmittedRemotely.set(true);
+          synchronized (jobSubmittedRemotely) {
+            jobSubmittedRemotely.notifyAll();
+          }
         }
       } else {
-        jobSubmittedRemotely = true;
-      }
-
-      // only set status when the status fetched from JobStatusPoller is RUNNING,
-      // the status of job itself is still in PENDING.
-      // Because the status from JobStatusPoller may happen after the job is finished.
-      synchronized (this.job) {
-        if (after == Status.RUNNING && this.job.getStatus() == Status.PENDING) {
-          this.job.setStatus(Status.RUNNING);
+        jobSubmittedRemotely.set(true);
+        synchronized (jobSubmittedRemotely) {
+          jobSubmittedRemotely.notifyAll();
         }
       }
+      job.setStatus(after);
     }
   }
 

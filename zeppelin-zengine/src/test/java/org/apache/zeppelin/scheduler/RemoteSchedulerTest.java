@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RemoteSchedulerTest extends AbstractInterpreterTest {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteSchedulerTest.class);
   private InterpreterSetting interpreterSetting;
   private SchedulerFactory schedulerSvc;
@@ -137,7 +138,6 @@ class RemoteSchedulerTest extends AbstractInterpreterTest {
     intpA.open();
 
     Scheduler scheduler = intpA.getScheduler();
-
     Job<Object> job1 = new Job<Object>("jobId1", "jobName1", null) {
       Object results;
       InterpreterContext context = InterpreterContext.builder()
@@ -211,18 +211,19 @@ class RemoteSchedulerTest extends AbstractInterpreterTest {
       @Override
       protected Object jobRun() throws Throwable {
         intpA.interpret("1000", context);
+        LOGGER.error("HIER!!!");
         return "1000";
       }
 
       @Override
       protected boolean jobAbort() {
-        if (isRunning()) {
+        // if (isRunning()) {
           try {
             intpA.cancel(context);
           } catch (InterpreterException e) {
             e.printStackTrace();
           }
-        }
+        // }
         return true;
       }
 
@@ -245,8 +246,9 @@ class RemoteSchedulerTest extends AbstractInterpreterTest {
     }
     assertTrue(job1.isRunning());
     assertEquals(Status.PENDING, job2.getStatus());
-
-    job2.abort();
+    LOGGER.warn("Cancel job2");
+    scheduler.cancel(job2.getId());
+    // job2.abort();
 
     cycles = 0;
     while (!job1.isTerminated() && cycles < MAX_WAIT_CYCLES) {
@@ -258,7 +260,7 @@ class RemoteSchedulerTest extends AbstractInterpreterTest {
     assertTrue(job1.isTerminated());
     assertEquals("1000", job1.getReturn());
     assertNull(job2.getDateFinished());
-    assertTrue(job2.isTerminated());
+    assertTrue(job2.isTerminated(), "Job2 is not terminated - current status " + job2.getStatus());
     assertEquals("result2", job2.getReturn());
 
     intpA.close();

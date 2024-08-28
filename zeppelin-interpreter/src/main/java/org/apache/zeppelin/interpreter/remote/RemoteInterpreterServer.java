@@ -869,7 +869,7 @@ public class RemoteInterpreterServer extends Thread
 
     @Override
     protected boolean jobAbort() {
-      return false;
+      return true;
     }
 
     @Override
@@ -884,13 +884,22 @@ public class RemoteInterpreterServer extends Thread
                      String className,
                      RemoteInterpreterContext interpreterContext)
           throws InterpreterRPCException, TException {
-    LOGGER.info("cancel {} {}", className, interpreterContext.getParagraphId());
+    LOGGER.info("cancel classname[{}] paragraphId[{}] sessionId[{}]", className,
+        interpreterContext.getParagraphId(), sessionId);
     Interpreter intp = getInterpreter(sessionId, className);
     String jobId = interpreterContext.getParagraphId();
     Job<?> job = intp.getScheduler().getJob(jobId);
 
+    if (job != null) {
+      LOGGER.info("JobStatus {}", job.getStatus());
+    }
     if (job != null && job.getStatus() == Status.PENDING) {
+      // Abort the job to inform the scheduler that this job does not need to be executed
+      job.abort();
+      LOGGER.info("isJobaborted {}", job.isAborted());
+      // Set Abort Status to inform the Zeppelin server about the abort.
       job.setStatus(Status.ABORT);
+      LOGGER.info("Set job {} to abort", job);
     } else {
       Thread thread = new Thread( ()-> {
         try {

@@ -346,12 +346,12 @@ public class RemoteInterpreter extends Interpreter {
     if (executionMode.equals("paragraph")) {
       String name = RemoteInterpreter.class.getSimpleName() + "-" + getInterpreterGroup().getId()
           + "-" + sessionId;
-      Scheduler s = new RemoteScheduler(name, this);
+      Scheduler s = new RemoteScheduler(name, SchedulerFactory.singleton().getExecutor(), this);
       return SchedulerFactory.singleton().createOrGetScheduler(s);
     } else if (executionMode.equals("note")) {
       String noteId = getProperty(".noteId");
       String name = RemoteInterpreter.class.getSimpleName() + "-" + noteId;
-      Scheduler s = new RemoteScheduler(name, this);
+      Scheduler s = new RemoteScheduler(name, SchedulerFactory.singleton().getExecutor(), this);
       return SchedulerFactory.singleton().createOrGetScheduler(s);
     } else {
       throw new RuntimeException("Invalid execution mode: " + executionMode);

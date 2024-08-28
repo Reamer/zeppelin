@@ -26,15 +26,14 @@ import java.util.Map;
 /**
  *
  */
-public class SleepingJob extends Job {
+public class SleepingJob extends Job<Long> {
 
   private int time;
-  boolean abort = false;
   private long start;
   private int count;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SleepingJob.class);
-  private Object results;
+  private Long results;
 
 
   public SleepingJob(String jobName, JobListener listener, int time) {
@@ -44,9 +43,9 @@ public class SleepingJob extends Job {
   }
 
   @Override
-  public Object jobRun() {
+  public Long jobRun() {
     start = System.currentTimeMillis();
-    while (abort == false) {
+    while (!isAborted()) {
       count++;
       try {
         Thread.sleep(10);
@@ -62,17 +61,16 @@ public class SleepingJob extends Job {
 
   @Override
   public boolean jobAbort() {
-    abort = true;
     return true;
   }
 
   @Override
-  public void setResult(Object results) {
+  public void setResult(Long results) {
     this.results = results;
   }
 
   @Override
-  public Object getReturn() {
+  public Long getReturn() {
     return results;
   }
 
