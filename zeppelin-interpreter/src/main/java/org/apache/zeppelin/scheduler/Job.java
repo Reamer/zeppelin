@@ -178,6 +178,10 @@ public abstract class Job<T> {
   }
 
   public void onJobEnded() {
+    // Do not set a finish date, if job is aborted
+    if (isAborted()) {
+      return;
+    }
     dateFinished = new Date();
   }
 
@@ -194,9 +198,14 @@ public abstract class Job<T> {
   }
 
   private void completeWithSuccess(T result) {
-    setResult(result);
+    // Do not set a anything if the job is aborted or failed
+    if (isAborted() || status.isFailed()) {
+      return;
+    }
     exception = null;
     errorMessage = null;
+    setResult(result);
+
   }
 
   private void completeWithError(Throwable error) {
