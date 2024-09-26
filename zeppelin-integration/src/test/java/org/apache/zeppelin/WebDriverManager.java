@@ -128,7 +128,7 @@ public class WebDriverManager implements Closeable {
       throw new RuntimeException("No available WebDriver");
     }
 
-    String url = "http://localhost:" + port + "/classic";
+    String url = "http://localhost:" + port;
 
     long start = System.currentTimeMillis();
     boolean loaded = false;

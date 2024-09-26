@@ -145,20 +145,14 @@ function wait_zeppelin_is_up_for_ci() {
   if [[ "${CI}" == "true" ]]; then
     local count=0;
     while [[ "${count}" -lt 30 ]]; do
-      # check with angular webapp path
       curl -v localhost:8080 2>&1 | grep '200 OK'
-      if [[ $? -eq 0 ]]; then
+      if [[ $? -ne 0 ]]; then
+        sleep 1
+        continue
+      else
         break
       fi
-
-      # check with classic webapp path
-      curl -v localhost:8080/classic/ 2>&1 | grep '200 OK'
-      if [[ $? -eq 0 ]]; then
-        break
-      fi
-
-      sleep 1
-      let "count+=1"
+        let "count+=1"
     done
   fi
 }

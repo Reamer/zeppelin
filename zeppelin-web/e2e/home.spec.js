@@ -22,7 +22,7 @@ describe('Home e2e Test', function() {
 
   //tests
   it('should have a welcome message', function() {
-    browser.get('http://localhost:8080/classic');
+    browser.get('http://localhost:8080');
     browser.sleep(500);
     var welcomeElem = element(by.id('welcome'))
 
@@ -57,7 +57,7 @@ describe('Home e2e Test', function() {
     scrollToElementAndClick(element(by.xpath('//*[@id="' + interpreterName + '"]//span[@class="fa fa-pencil"]')))
     scrollToElementAndClick(element(by.xpath('//*[@id="' + interpreterName + '"]//button[@type="submit"]')))
     clickOn(element(by.xpath('//div[@class="bootstrap-dialog-footer-buttons"]//button[contains(text(), \'OK\')]')))
-    browser.get('http://localhost:8080/classic/#/interpreter');
+    browser.get('http://localhost:8080/#/interpreter');
     var text = element(by.xpath('//*[@id="' + interpreterName + '"]//li[contains(text(), \'admin\')]')).getText()
     scrollToElementAndClick(element(by.xpath('//*[@id="' + interpreterName + '"]//span//span[@class="fa fa-trash"]')))
     clickOn(element(by.xpath('//div[@class="bootstrap-dialog-footer-buttons"]//button[contains(text(), \'OK\')]')))
