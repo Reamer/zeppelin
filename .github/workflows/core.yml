@@ -425,8 +425,8 @@ jobs:
       - name: install environment
         run: |
           ./mvnw install -DskipTests -pl livy -am  ${MAVEN_ARGS}
-          ./testing/downloadSpark.sh "2.4.8" "2.7"
-          ./testing/downloadLivy.sh "0.8.0-incubating" "2.11"
+          ./testing/downloadSpark.sh "3.5.3" "3"
+          ./testing/downloadLivy.sh "0.8.0-incubating" "2.12"
       - name: Setup conda environment with python 3.7 and R
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -443,7 +443,7 @@ jobs:
       - name: run tests
         run: |
           export SPARK_HOME=$PWD/spark-2.4.8-bin-hadoop2.7
-          export LIVY_HOME=$PWD/apache-livy-0.8.0-incubating_2.11-bin
+          export LIVY_HOME=$PWD/apache-livy-0.8.0-incubating_2.12-bin
           ./mvnw verify -pl livy -am ${MAVEN_ARGS}
 
   default-build:
