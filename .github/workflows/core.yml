@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 8, 11 ]
+        java: [ 11 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -91,7 +91,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 8, 11 ]
+        java: [ 11 ]
     env:
       INTERPRETERS: 'hbase,jdbc,file,flink-cmd,cassandra,elasticsearch,bigquery,alluxio,livy,groovy,java,neo4j,sparql,mongodb,influxdb,shell'
     steps:
@@ -137,7 +137,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ 3.9 ]
-        java: [ 8, 11 ]
+        java: [ 11 ]
         include:
           - python: 3.7
             java: 8
@@ -190,7 +190,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 8, 11 ]
+        java: [ 11 ]
     steps:
       # user/password => root/root
       - name: Start mysql
@@ -297,7 +297,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 8, 11 ]
+        java: [ 11 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -346,7 +346,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ 3.9 ]
-        java: [ 8, 11 ]
+        java: [ 11 ]
         include:
           - python: 3.7
             java: 8
