@@ -71,12 +71,10 @@ limitations under the License.
     <module name="JavadocMethod">
       <property name="scope" value="protected"/>
       <property name="severity" value="warning"/>
-      <property name="allowMissingJavadoc" value="true"/>
+      <property name="accessModifiers" value="protected"/>
       <property name="allowMissingParamTags" value="true"/>
       <property name="allowMissingReturnTag" value="true"/>
-      <property name="allowMissingThrowsTags" value="true"/>
-      <property name="allowThrowsTagsForSubclasses" value="true"/>
-      <property name="allowUndeclaredRTE" value="true"/>
+      <property name="validateThrows" value="false"/>
     </module>
 
     <module name="JavadocStyle">
