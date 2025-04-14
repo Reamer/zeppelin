@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -156,7 +157,13 @@ public class WebDriverManager implements Closeable {
 
     assertTrue(loaded);
 
-    driver.manage().window().maximize();
+    // Work around driver.maximize_window() w/ Xvfb crashing Chrome
+    // https://github.com/SeleniumHQ/selenium/issues/15358
+    if (driver instanceof ChromeDriver) {
+      driver.manage().window().setSize(new Dimension(1280, 800));
+    } else {
+      driver.manage().window().maximize();
+    }
     return driver;
   }
 
