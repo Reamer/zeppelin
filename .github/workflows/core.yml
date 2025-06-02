@@ -71,9 +71,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: python_3_with_R
-          environment-file: testing/env_python_3.9_with_R.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
+          environment-file: testing/env_python_3_with_R.yml
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -120,10 +118,8 @@ jobs:
       - name: Setup conda environment with python 3.9 and R
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: python_3_with_R_and_tensorflow
-          environment-file: testing/env_python_3_with_R_and_tensorflow.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_3_with_R.yml
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -136,7 +132,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.9 ]
         java: [ 11 ]
     steps:
       - name: Checkout
@@ -163,9 +158,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: python_3_with_R
-          environment-file: testing/env_python_${{ matrix.python }}_with_R.yml
-          python-version: ${{ matrix.python }}
-          channels: conda-forge,defaults
+          environment-file: testing/env_python_3_with_R.yml
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -219,8 +212,6 @@ jobs:
         with:
           activate-environment: python_3_with_R
           environment-file: testing/env_python_3_with_R.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -240,11 +231,6 @@ jobs:
       matrix:
         python: [ 3.9 ]
         flink: [116, 117]
-        include:
-          # Flink 1.15 supports Python 3.6, 3.7, and 3.8
-          # https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/dev/python/installation/
-          - python: 3.8
-            flink: 115
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -276,7 +262,6 @@ jobs:
           activate-environment: python_3_with_flink
           environment-file: testing/env_python_3_with_flink_${{ matrix.flink }}.yml
           python-version: ${{ matrix.python }}
-          channels: conda-forge,defaults
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -323,8 +308,6 @@ jobs:
         with:
           activate-environment: python_3_with_R
           environment-file: testing/env_python_3_with_R.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
@@ -332,7 +315,7 @@ jobs:
         run: |
           R -e "IRkernel::installspec()"
       - name: run tests
-        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -Dtest=SparkSubmitIntegrationTest,ZeppelinSparkClusterTest32,SparkIntegrationTest32,ZeppelinSparkClusterTest33,SparkIntegrationTest33 -DfailIfNoTests=false ${MAVEN_ARGS}
+        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -Dtest=SparkSubmitIntegrationTest,ZeppelinSparkClusterTest34,ZeppelinSparkClusterTest35,SparkIntegrationTest34,SparkIntegrationTest35 -DfailIfNoTests=false ${MAVEN_ARGS}
 
   # test on spark for each spark version & scala version
   spark-test:
@@ -340,7 +323,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.9 ]
         java: [ 11, 17 ]
     steps:
       - name: Checkout
@@ -369,89 +351,26 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: python_3_with_R
-          environment-file: testing/env_python_${{ matrix.python }}_with_R.yml
-          python-version: ${{ matrix.python }}
-          channels: conda-forge,defaults
+          environment-file: testing/env_python_3_with_R.yml
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true
       - name: Make IRkernel available to Jupyter
         run: |
           R -e "IRkernel::installspec()"
-      - name: run spark-3.3 tests with scala-2.12 and python-${{ matrix.python }}
-        if: ${{ matrix.java == 11 }}
-        run: |
-          rm -rf spark/interpreter/metastore_db
-          ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-3.3 -Pspark-scala-2.12 -Pintegration -DfailIfNoTests=false ${MAVEN_ARGS}
-      - name: run spark-3.3 tests with scala-2.13 and python-${{ matrix.python }}
-        if: ${{ matrix.java == 11 }}
-        run: |
-          rm -rf spark/interpreter/metastore_db
-          ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-3.3 -Pspark-scala-2.13 -Pintegration -DfailIfNoTests=false ${MAVEN_ARGS}
-      - name: run spark-3.4 tests with scala-2.13 and python-${{ matrix.python }}
-        if: ${{ matrix.java == 11 }}
+      - name: run spark-3.4 tests with scala-2.13
         run: |
           rm -rf spark/interpreter/metastore_db
           ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-3.4 -Pspark-scala-2.13 -Pintegration -DfailIfNoTests=false ${MAVEN_ARGS}
-      - name: run spark-3.5 tests with scala-2.13 and python-${{ matrix.python }}
-        if: ${{ matrix.java == 11 }}
+      - name: run spark-3.5 tests with scala-2.13
         run: |
           rm -rf spark/interpreter/metastore_db
           ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-3.5 -Pspark-scala-2.13 -Pintegration -DfailIfNoTests=false ${MAVEN_ARGS}
-      - name: run spark-4.0 tests with scala-2.13 and python-${{ matrix.python }}
+      - name: run spark-4.0 tests with scala-2.13
         if: ${{ matrix.java == 17 }}
         run: |
           rm -rf spark/interpreter/metastore_db
           ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-4.0 -Pspark-scala-2.13 -Pintegration -DfailIfNoTests=false ${MAVEN_ARGS}
-
-  # Livy 0.8.0 tested with Spark 3.2
-  # https://github.com/apache/incubator-livy/blob/v0.8.0-incubating/dev/docker/livy-dev-spark/Dockerfile#L20
-  livy-0-8-with-spark-3-2-under-python39:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Tune Runner VM
-        uses: ./.github/actions/tune-runner-vm
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 11
-      - name: Cache local Maven repository
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.m2/repository
-            !~/.m2/repository/org/apache/zeppelin/
-            ~/.spark-dist
-            ~/.cache
-          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-zeppelin-
-      - name: install environment
-        run: |
-          ./mvnw install -DskipTests -pl livy -am ${MAVEN_ARGS}
-          ./testing/downloadSpark.sh "3.2.4" "3.2"
-          ./testing/downloadLivy.sh "0.8.0-incubating" "2.12"
-      - name: Setup conda environment with python 3.9 and R
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: python_39_with_R
-          environment-file: testing/env_python_3.9_with_R.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
-          channel-priority: strict
-          auto-activate-base: false
-          use-mamba: true
-      - name: Make IRkernel available to Jupyter
-        run: |
-          R -e "IRkernel::installspec()"
-      - name: run tests
-        run: |
-          export SPARK_HOME=$PWD/spark-3.2.4-bin-hadoop3.2
-          export LIVY_HOME=$PWD/apache-livy-0.8.0-incubating_2.12-bin
-          ./mvnw verify -pl livy ${MAVEN_ARGS}
 
   default-build:
     runs-on: ubuntu-24.04

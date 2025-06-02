@@ -29,7 +29,7 @@ public class ZeppelinSparkClusterTest34 {
 
       @BeforeEach
       public void downloadSpark() throws Exception {
-        prepareSpark("3.4.0", "3");
+        prepareSpark("3.4.4", "3");
       }
   }
 }

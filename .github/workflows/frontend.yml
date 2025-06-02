@@ -117,8 +117,6 @@ jobs:
         with:
           activate-environment: python_3_with_R
           environment-file: testing/env_python_3_with_R.yml
-          python-version: 3.9
-          channels: conda-forge,defaults
           channel-priority: strict
           auto-activate-base: false
           use-mamba: true

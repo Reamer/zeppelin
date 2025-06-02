@@ -1,38 +1,30 @@
 name: python_3_with_R
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - pycodestyle
-  - scipy
-  - numpy=1.19.5
+  - python=3
   - grpcio
-  - protobuf
-  - pandasql
-  - sqlalchemy=1.4.46
+  # Pin to latest protoc 21.x, which is also used in zeppelin with verion 3.21
+  - protobuf=4.21
   - ipython
-  - ipython_genutils
   - ipykernel
-  - jupyter_client=5
+  - jupyter_client
+  # used in PythonInterpreterPandasSqlTestTest
+  - pandasql
+  # some plotting libs used in IPythonInterpreterTest
+  - matplotlib
+  - bokeh
   - hvplot
-  - holoviews=1.16
-  - plotnine
-  - seaborn
-  - bokeh=2.4
-  - intake
-  - intake-parquet
-  - intake-xarray
-  - altair
-  - vega_datasets
-  - plotly
-  - jinja2=3.0.3
-  - pip
-  - r-base=3.6
-  - r-data.table
-  - r-evaluate
-  - r-base64enc
-  - r-knitr
-  - r-ggplot2
+## R-Packages
+  - r-base
   - r-irkernel
-  - r-shiny
+  # Used in IRKernelTest
+  - r-ggplot2
+  # Used in IRKernelTest
   - r-googlevis
+  # Used in RInterpreterTest
+  - r-knitr
+  # Used in ShinyInterpreterTest
+  - r-shiny
+  # Used in SparkIntegrationTest
+  - r-markdown

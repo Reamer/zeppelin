@@ -20,17 +20,16 @@ package org.apache.zeppelin.integration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import java.io.IOException;
 
-public class SparkIntegrationTest34 {
+public class ZeppelinSparkClusterTest35 {
 
   @Nested
   @DisplayName("Hadoop3")
-  public class Hadoop3 extends SparkIntegrationTest {
+  public class Hadoop3 extends ZeppelinSparkClusterTest {
 
-    @BeforeEach
-    public void downloadSpark() throws IOException {
-      prepareSpark("3.4.4", "3");
-    }
+      @BeforeEach
+      public void downloadSpark() throws Exception {
+        prepareSpark("3.5.6", "3");
+      }
   }
 }

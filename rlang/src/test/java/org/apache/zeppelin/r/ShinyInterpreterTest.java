@@ -219,7 +219,8 @@ public class ShinyInterpreterTest {
     // call shiny app via rest api
     HttpResponse<String> response = Unirest.get(shinyURL).asString();
     assertEquals(500, response.getStatus());
-
+    // give shiny a little bit time
+    Thread.sleep(1 * 1000);
     resultMessages = context2.out.toInterpreterResultMessage();
     assertTrue(resultMessages.get(1).getData().contains("Invalid_code"),
         resultMessages.get(1).getData());
